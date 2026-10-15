@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quản trị | Gyu Sachi Yakiniku</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/admin.css">
+  <link rel="stylesheet" href="/css/floorplan.css">
+</head>
+<body>
+  <!-- Đăng nhập -->
+  <main class="login" id="login-view" hidden>
+    <form class="login-card" id="login-form" novalidate>
+      <div class="login-brand"><img class="login-logo" src="/img/logo.png" alt="" width="62" height="52"><span>GYU SACHI</span></div>
+      <h1>Đăng nhập quản trị</h1>
+      <div class="fld">
+        <label for="lg-user">Tên đăng nhập</label>
+        <input id="lg-user" autocomplete="username" autocapitalize="none" required>
+      </div>
+      <div class="fld">
+        <label for="lg-pass">Mật khẩu</label>
+        <input id="lg-pass" type="password" autocomplete="current-password" required>
+      </div>
+      <p class="form-err" id="lg-err" role="alert"></p>
+      <button class="btn primary block" type="submit" id="lg-btn">Đăng nhập</button>
+    </form>
+  </main>
+
+  <!-- Ứng dụng -->
+  <div class="shell" id="app-view" hidden>
+    <aside class="side" id="side">
+      <div class="side-brand"><img class="side-logo" src="/img/logo.png" alt="" width="48" height="40"><span class="side-name">GYU SACHI<small>Quản trị</small></span></div>
+      <nav id="menu" aria-label="Chức năng"></nav>
+      <div class="side-user">
+        <div><strong id="u-name"></strong><span id="u-role"></span></div>
+        <div class="side-actions">
+          <button class="link" type="button" id="btn-pass">Đổi mật khẩu</button>
+          <button class="link" type="button" id="btn-logout">Đăng xuất</button>
+        </div>
+      </div>
+    </aside>
+    <div class="main">
+      <header class="bar">
+        <button class="icon-btn menu-toggle" type="button" id="menu-toggle" aria-label="Mở menu" aria-expanded="false">&#9776;</button>
+        <h1 id="screen-title"></h1>
+      </header>
+      <section class="content" id="screen" tabindex="-1"></section>
+    </div>
+  </div>
+
+  <dialog id="dlg-confirm">
+    <form method="dialog" class="dlg">
+      <h2 id="dc-title"></h2>
+      <p id="dc-text"></p>
+      <div class="dlg-actions">
+        <button class="btn" value="no" id="dc-no">Không</button>
+        <button class="btn primary" value="yes" id="dc-yes">Đồng ý</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-pass">
+    <form class="dlg" id="pass-form" novalidate>
+      <h2>Đổi mật khẩu</h2>
+      <div class="fld"><label for="pw-old">Mật khẩu hiện tại</label><input id="pw-old" type="password" autocomplete="current-password"></div>
+      <div class="fld"><label for="pw-new">Mật khẩu mới</label><input id="pw-new" type="password" autocomplete="new-password"><small>Từ 8 ký tự, gồm cả chữ và số.</small></div>
+      <p class="form-err" id="pw-err" role="alert"></p>
+      <div class="dlg-actions">
+        <button class="btn" type="button" id="pw-cancel">Hủy</button>
+        <button class="btn primary" type="submit" id="pw-ok">Đổi mật khẩu</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="alert"></div>
+
+  <script src="/js/floorplan.js"></script>
+  <script src="/admin/js/app.js"></script>
+  <script src="/admin/js/screens-reservations.js"></script>
+  <script src="/admin/js/screens-tables.js"></script>
+  <script src="/admin/js/screens-admin.js"></script>
+  <script src="/admin/js/screens-extra.js"></script>
+  <script>Admin.start();</script>
+</body>
+</html>

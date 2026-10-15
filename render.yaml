@@ -1,0 +1,28 @@
+# Tùy chọn: Render Blueprint. Dùng khi chọn "New > Blueprint" và trỏ vào repo GitHub.
+# Nếu làm tay theo docs/DEPLOY.md thì không cần file này.
+databases:
+  - name: gyusachi-db
+    plan: free
+    databaseName: gyusachi
+
+services:
+  - type: web
+    name: gyusachi
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gyusachi-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FB_VERIFY_TOKEN
+        value: gyusachi-verify-token
+      - key: FB_APP_SECRET
+        sync: false
+      - key: FB_PAGE_ACCESS_TOKEN
+        sync: false

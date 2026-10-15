@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tra cứu đặt bàn | Gyu Sachi Yakiniku</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Noto+Serif+JP:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/">
+      <img class="brand-logo" src="/img/logo.png" alt="" width="52" height="44"><span class="brand-name">GYU SACHI</span>
+      <span class="brand-sub" data-i18n="brandSub">Yakiniku Đà Nẵng</span>
+    </a>
+    <nav class="nav" aria-label="Menu">
+      <a href="/about.html" data-i18n="navAbout">Về chúng tôi</a>
+      <a href="/menu.html" data-i18n="navMenu">Thực đơn</a>
+      <a href="/book.html" data-i18n="navBook">Đặt bàn</a>
+      <a href="/lookup.html" aria-current="page" data-i18n="navLookup">Tra cứu</a>
+      <a href="/recruitment.html" data-i18n="navJobs">Tuyển dụng</a>
+      <span class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="vi" aria-pressed="true">VI</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </span>
+    </nav>
+  </header>
+
+  <main class="page narrow">
+    <div class="page-head">
+      <h1 data-i18n="lookupTitle">Tra cứu đặt bàn</h1>
+      <p data-i18n="lookupLead"></p>
+    </div>
+
+    <section class="step" id="find-card">
+      <form id="find-form" novalidate>
+        <div class="fld">
+          <label for="l-phone" data-i18n="phone"></label>
+          <input id="l-phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" required>
+          <p class="err" id="e-phone" role="alert"></p>
+        </div>
+        <div class="fld">
+          <label for="l-code" data-i18n="codeLabel"></label>
+          <input id="l-code" autocapitalize="characters" autocomplete="off" maxlength="8" data-i18n-ph="codePh" required>
+          <p class="err" id="e-code" role="alert"></p>
+        </div>
+        <div class="btn-row"><button class="btn" type="submit" id="find-btn" data-i18n="findBtn"></button></div>
+      </form>
+    </section>
+
+    <section class="done result" id="result" hidden aria-live="polite">
+      <div class="code-box"><small data-i18n="doneCode"></small><output id="r-code"></output></div>
+      <p class="status-line"><span data-i18n="status"></span>: <strong id="r-status"></strong></p>
+      <dl class="recap" id="recap"></dl>
+      <p class="notice" id="r-msg" hidden></p>
+      <div id="cancel-ask" class="cancel-ask" hidden>
+        <p id="cancel-q"></p>
+        <div class="btn-row">
+          <button class="btn danger" type="button" id="cancel-yes" data-i18n="cancelYes"></button>
+          <button class="btn ghost" type="button" id="cancel-keep" data-i18n="cancelKeep"></button>
+        </div>
+      </div>
+      <div class="btn-row" id="result-actions">
+        <button class="btn danger-ghost" type="button" id="cancel-btn" data-i18n="cancelBtn" hidden></button>
+        <button class="btn ghost" type="button" id="again" data-i18n="searchAgain"></button>
+      </div>
+    </section>
+  </main>
+
+  <p class="foot"><span data-i18n="footer"></span><span class="sep" aria-hidden="true">|</span><span data-i18n="hotlineLabel"></span>: <a id="foot-hotline" href="#"></a></p>
+  <div class="toast" id="toast" role="alert"></div>
+
+  <script src="/js/i18n.js"></script>
+  <script src="/js/lookup.js"></script>
+  <script src="/js/footer.js"></script>
+</body>
+</html>
