@@ -1,16 +1,240 @@
 <!doctype html>
 <html lang="vi">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Về chúng tôi · Gyu Sachi Yakiniku</title>
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Noto+Serif+JP:wght@600;700&display=swap" rel="stylesheet">
+  <title>Giới thiệu · Gyu Sachi Yakiniku</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Noto+Serif+JP:wght@600;700&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="/css/site.css">
   <link rel="stylesheet" href="/css/pages.css">
+  <style>
+    .ab-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      max-width: 760px;
+      margin: 0 auto clamp(40px, 6vw, 64px)
+    }
+
+    .ab-stat {
+      text-align: center;
+      padding: 18px 8px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--panel)
+    }
+
+    .ab-stat b {
+      display: block;
+      font-family: var(--display);
+      font-size: clamp(28px, 5vw, 44px);
+      line-height: 1.1;
+      color: var(--gold-soft);
+      font-weight: 600
+    }
+
+    .ab-stat span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: .04em
+    }
+
+    .ab-sec {
+      max-width: 880px;
+      margin: 0 auto clamp(48px, 7vw, 80px)
+    }
+
+    .ab-sec>.eyebrow {
+      margin-bottom: 10px
+    }
+
+    .ab-sec h2 {
+      text-align: center;
+      font-size: clamp(28px, 4.4vw, 44px);
+      margin: 0 0 22px;
+      line-height: 1.15;
+      font-weight: 600
+    }
+
+    .ab-sec p {
+      margin: 0 0 16px;
+      font-size: clamp(16px, 2vw, 18px);
+      line-height: 1.85;
+      color: var(--text);
+      text-align: center
+    }
+
+    .ab-sec p b {
+      color: var(--gold-soft)
+    }
+
+    .ab-branches {
+      list-style: none;
+      margin: 26px 0 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px
+    }
+
+    .ab-branches li {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--panel)
+    }
+
+    .ab-branches li.here {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 1px rgba(201, 162, 75, .25) inset
+    }
+
+    .ab-branches .n {
+      flex: none;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1.5px solid var(--gold);
+      display: grid;
+      place-items: center;
+      font-family: var(--display);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--gold-soft)
+    }
+
+    .ab-branches b {
+      display: block;
+      color: var(--gold-soft);
+      font-size: 14px;
+      letter-spacing: .04em
+    }
+
+    .ab-branches span.addr {
+      display: block;
+      margin-top: 2px;
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.5
+    }
+
+    .ab-branches em {
+      display: inline-block;
+      margin-top: 6px;
+      font-style: normal;
+      font-size: 12px;
+      color: var(--gold);
+      letter-spacing: .06em
+    }
+
+    .ab-name {
+      display: grid;
+      gap: 14px;
+      margin: 26px auto 0;
+      max-width: 640px
+    }
+
+    .ab-name div {
+      padding: 16px 20px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--panel);
+      text-align: left;
+      line-height: 1.7
+    }
+
+    .ab-name b {
+      color: var(--gold-soft)
+    }
+
+    .ab-name .join {
+      text-align: center;
+      border-color: var(--gold)
+    }
+
+    .ab-sec p.ab-quote {
+      font-family: var(--display);
+      font-size: clamp(22px, 3.2vw, 30px);
+      text-align: center;
+      color: var(--gold-soft);
+      line-height: 1.5;
+      margin: 26px 0 0;
+      font-weight: 500
+    }
+
+    .ab-cards {
+      list-style: none;
+      margin: 26px 0 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px
+    }
+
+    .ab-cards li {
+      padding: 18px 20px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--panel);
+      line-height: 1.7;
+      font-size: 15.5px;
+      color: var(--text)
+    }
+
+    .ab-cards b {
+      display: block;
+      color: var(--gold-soft);
+      font-size: 15px;
+      letter-spacing: .04em;
+      margin-bottom: 4px
+    }
+
+    .ab-occ {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px
+    }
+
+    .ab-occ span {
+      padding: 8px 16px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--gold-soft);
+      font-size: 14px
+    }
+
+    @media (max-width:640px) {
+      .ab-stats {
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px
+      }
+
+      .ab-branches,
+      .ab-cards {
+        grid-template-columns: 1fr
+      }
+
+      .ab-stat {
+        padding: 14px 4px
+      }
+    }
+  </style>
 </head>
+
 <body>
   <header class="top">
-    <a class="brand" href="/"><img class="brand-logo" src="/img/logo.png" alt="" width="52" height="44"><span class="brand-name">GYU SACHI</span><span class="brand-sub" data-i18n="brandSub">Yakiniku Đà Nẵng</span></a>
+    <a class="brand" href="/"><img class="brand-logo" src="/img/logo.png" alt="" width="52" height="44"><span
+        class="brand-name">GYU SACHI</span><span class="brand-sub" data-i18n="brandSub">Yakiniku Đà Nẵng</span></a>
     <nav class="nav" aria-label="Menu">
       <a href="/about.html" aria-current="page" data-i18n="navAbout">Về chúng tôi</a>
       <a href="/menu.html" data-i18n="navMenu">Thực đơn</a>
@@ -25,46 +249,187 @@
   </header>
   <section class="about-hero">
     <div class="eyebrow" data-h="aEy">Về chúng tôi</div>
-    <h1 data-h="aH">Câu chuyện của cái tên</h1>
+    <h1 data-h="aH">GYUSACHI YAKINIKU</h1>
+    <p class="ab-tag" data-h="aSub" style="margin:0 0 28px;color:var(--muted);font-size:clamp(15px,2vw,18px)">Buffet lẩu
+      nướng Nhật Bản tại Đà Nẵng</p>
     <div class="glyphs" aria-hidden="true">
       <div class="glyph"><span class="kanji">牛</span><b>gyū</b><small data-h="g1">bò</small></div>
       <div class="plus">+</div>
-      <div class="glyph"><span class="kanji">幸</span><b>sachi</b><small data-h="g2">hạnh phúc · may mắn</small></div>
+      <div class="glyph"><span class="kanji">幸</span><b>sachi</b><small data-h="g2">hạnh phúc · niềm vui</small></div>
     </div>
   </section>
+
   <section class="block">
-    <div class="block-in narrow">
-      <article class="chap"><h3 data-h="p1h">Hai chữ Hán</h3><p data-h="p1">Gyu Sachi được ghép từ hai chữ Hán: <b>牛 (gyū)</b> là con bò, <b>幸 (sachi)</b> là hạnh phúc, là may mắn.</p></article>
-      <article class="chap"><h3 data-h="p2h">Một lời chúc giản dị</h3><p data-h="p2">Đặt cạnh nhau, chúng thành một lời chúc: hạnh phúc đến từ miếng bò ngon.</p></article>
-      <article class="chap"><h3 data-h="p3h">Quanh một mặt bếp</h3><p data-h="p3">Yakiniku nghĩa là “thịt nướng”. Điều làm nên bữa yakiniku không chỉ là món ăn mà là cả bàn quây quần quanh một mặt bếp: người gắp, người lật, người chia phần cho nhau.</p></article>
-      <article class="chap"><h3 data-h="p4h">Một chiếc bàn cho người thân</h3><p data-h="p4">Vì vậy ở Gyu Sachi, mỗi bàn là một mặt bếp nhỏ dành cho những người bạn thương. Chúng tôi muốn việc đặt chỗ cũng nhẹ nhàng như vậy: chọn đúng bàn, nhận xác nhận trong một phút, rồi chỉ việc đến và cùng nhau thưởng thức.</p></article>
+    <div class="ab-wrap" style="max-width:1080px;margin:0 auto">
+      <div class="ab-stats block-in">
+        <div class="ab-stat"><b>11/2021</b><span data-h="s1">Khởi đầu</span></div>
+        <div class="ab-stat"><b data-h="s2v">Gần 5</b><span data-h="s2">năm phát triển</span></div>
+        <div class="ab-stat"><b>4</b><span data-h="s3">cơ sở tại Đà Nẵng</span></div>
+      </div>
+
+      <div class="ab-sec block-in">
+        <div class="eyebrow" data-h="e1">Giới thiệu tổng quan</div>
+        <h2 data-h="h1">Điểm hẹn bên bếp nướng</h2>
+        <p data-h="o1">Khởi đầu từ tháng 11/2021, <b>GYUSACHI YAKINIKU</b> là hệ thống nhà hàng buffet lẩu nướng Nhật
+          Bản tại Đà Nẵng, mang đến trải nghiệm ẩm thực chuẩn Yakiniku với thực đơn đa dạng từ các loại thịt nướng, hải
+          sản, sushi, sashimi đến các món ăn đặc trưng.</p>
+        <p data-h="o2">Không chỉ phục vụ bữa ăn, GYUSACHI mong muốn là điểm hẹn để gia đình, bạn bè và đồng nghiệp quây
+          quần, chia sẻ những khoảnh khắc ấm cúng bên bếp nướng. Sau gần 5 năm phát triển, hệ thống hiện có 4 cơ sở tại
+          các vị trí trung tâm Đà Nẵng:</p>
+        <ul class="ab-branches">
+          <li><span class="n">1</span>
+            <div><b data-h="b1">Cơ sở 1</b><span class="addr">54–56 Quang Trung, Hải Châu</span></div>
+          </li>
+          <li class="here"><span class="n">2</span>
+            <div><b data-h="b2">Cơ sở 2</b><span class="addr">44 Trần Văn Trứ, Hòa Cường</span><em data-h="bh">Nhận đặt
+                bàn trên website này</em></div>
+          </li>
+          <li><span class="n">3</span>
+            <div><b data-h="b3">Cơ sở 3</b><span class="addr">69 Đỗ Bá, Ngũ Hành Sơn</span></div>
+          </li>
+          <li><span class="n">4</span>
+            <div><b data-h="b4">Cơ sở 4</b><span class="addr">404 Nguyễn Tri Phương, Hòa Cường</span></div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="ab-sec block-in">
+        <div class="eyebrow" data-h="e2">Câu chuyện thương hiệu</div>
+        <h2 data-h="h2">Những khoảnh khắc sum vầy</h2>
+        <p data-h="t1">Mỗi bữa ăn ngon không chỉ đến từ nguyên liệu chất lượng mà còn được tạo nên bởi những khoảnh khắc
+          sum vầy.</p>
+        <p data-h="t2">Từ mong muốn mang văn hóa nướng Nhật Bản đến gần hơn với thực khách Việt, GYUSACHI ra đời với
+          định hướng xây dựng một không gian nơi mọi người có thể thưởng thức những món ăn chuẩn vị, tận hưởng dịch vụ
+          chu đáo và lưu giữ những kỷ niệm đáng nhớ cùng người thân, bạn bè.</p>
+        <p data-h="t3">Qua từng năm phát triển, GYUSACHI không ngừng hoàn thiện thực đơn, nâng cao chất lượng phục vụ và
+          mở rộng hệ thống nhằm mang đến trải nghiệm đồng nhất tại mọi chi nhánh.</p>
+      </div>
+
+      <div class="ab-sec block-in">
+        <div class="eyebrow" data-h="e3">Ý nghĩa tên GYUSACHI</div>
+        <h2 data-h="h3">Ngưu Hạnh</h2>
+        <p data-h="n0">Tên gọi GYUSACHI được ghép từ hai từ mang nhiều ý nghĩa:</p>
+        <div class="ab-name">
+          <div data-h="n1"><b>Gyu (牛)</b> trong tiếng Nhật có nghĩa là bò, biểu tượng cho những món thịt bò nướng, linh
+            hồn của phong cách Yakiniku.</div>
+          <div data-h="n2"><b>Sachi (幸)</b> có nghĩa là hạnh phúc, niềm vui và sự viên mãn.</div>
+          <div class="join" data-h="n3">Khi kết hợp lại, GYUSACHI mang ý nghĩa <b>“Ngưu Hạnh”</b>: nơi những bữa tiệc
+            thịt bò ngon mang đến niềm hạnh phúc và sự gắn kết cho mọi thực khách.</div>
+        </div>
+        <p class="ab-quote" data-h="n4">Đó cũng chính là giá trị mà thương hiệu luôn hướng đến trong từng bữa ăn.</p>
+      </div>
+
+      <div class="ab-sec block-in">
+        <div class="eyebrow" data-h="e4">Triết lý phục vụ</div>
+        <h2 data-h="h4">Omotenashi</h2>
+        <p data-h="f1">GYUSACHI theo đuổi tinh thần hiếu khách <b>Omotenashi</b> của người Nhật: sự chăm sóc tinh tế và
+          thấu hiểu xuất phát từ sự chân thành.</p>
+        <p data-h="f2">Sự thoải mái của bạn được chăm chút trong từng chi tiết nhỏ: góc bàn riêng tư, vỉ nướng luôn được
+          chủ động thay mới, lửa bếp căn chỉnh vừa tầm và sự đón tiếp ấm áp. Đội ngũ GYUSACHI không chỉ phục vụ, mà đồng
+          hành để bạn hoàn toàn thả lỏng và tận hưởng trọn vẹn từng khoảnh khắc.</p>
+        <p data-h="f3">Chúng tôi luôn đề cao sự tận tâm trong từng chi tiết, từ khâu chuẩn bị nguyên liệu, chế biến món
+          ăn đến phong cách phục vụ chu đáo, thân thiện và chuyên nghiệp.</p>
+        <p data-h="f4">Mục tiêu của GYUSACHI là để mỗi thực khách khi rời nhà hàng đều mang theo sự hài lòng và mong
+          muốn quay trở lại.</p>
+      </div>
+
+      <div class="ab-sec block-in">
+        <div class="eyebrow" data-h="e5">Cam kết chất lượng</div>
+        <h2 data-h="h5">Những tiêu chuẩn khắt khe</h2>
+        <p data-h="q0">Để mỗi trải nghiệm đều trọn vẹn, GYUSACHI duy trì những tiêu chuẩn khắt khe:</p>
+        <ul class="ab-cards">
+          <li data-h="q1"><b>Nguyên liệu tươi ngon</b>Các loại thịt nướng và hải sản được chọn lọc kỹ từ nguồn uy tín,
+            giữ trọn vị tự nhiên.</li>
+          <li data-h="q2"><b>Chế biến tinh tế</b>Sốt ướp và nước lẩu nghiên cứu riêng, vừa giữ chuẩn vị Nhật vừa hợp
+            khẩu vị Việt.</li>
+          <li data-h="q3"><b>An toàn &amp; Chuẩn mực</b>Quy trình sơ chế và kiểm soát vệ sinh thực hiện nghiêm ngặt hàng
+            ngày.</li>
+          <li data-h="q4"><b>Trải nghiệm đồng nhất</b>Đảm bảo chất lượng món ăn và dịch vụ chu đáo như nhau trên toàn hệ
+            thống.</li>
+        </ul>
+      </div>
+
+      <div class="ab-sec block-in">
+        <div class="eyebrow" data-h="e6">Không gian ẩm thực</div>
+        <h2 data-h="h6">Tinh thần Nhật Bản đương đại</h2>
+        <p data-h="k1">Được xây dựng qua các giai đoạn khác nhau, mỗi cơ sở GYUSACHI mang một dấu ấn kiến trúc riêng: từ
+          ấm cúng, riêng tư đến rộng mở, hiện đại.</p>
+        <p data-h="k2">Dù khác biệt về đường nét, tất cả đều chung tinh thần Nhật Bản đương đại: chất liệu gỗ ấm áp, ánh
+          sáng dịu mắt và hệ thống hút khói hiện đại giữ trang phục luôn thơm tho.</p>
+        <p data-h="k3">GYUSACHI là lựa chọn phù hợp cho mọi dịp:</p>
+        <div class="ab-occ"><span data-h="c1">Hẹn hò lãng mạn</span><span data-h="c2">Bữa ăn gia đình</span><span
+            data-h="c3">Liên hoan</span><span data-h="c4">Tiếp khách</span></div>
+      </div>
+
       <p class="story-end" data-h="end">Bò · Hạnh phúc · Quây quần</p>
-      <div class="btn-row center"><a class="btn" href="/book.html" data-h="cta">Đặt bàn</a><a class="btn ghost" href="/menu.html" data-h="menu">Xem thực đơn</a></div>
+      <div class="btn-row center"><a class="btn" href="/book.html" data-h="cta">Đặt bàn</a><a class="btn ghost"
+          href="/menu.html" data-h="menu">Xem thực đơn</a></div>
     </div>
   </section>
-  <footer class="foot">Gyu Sachi Yakiniku · 44 Trần Văn Trứ, Đà Nẵng · <a href="tel:0934971972">0934 971 972</a></footer>
+  <footer class="foot">Gyu Sachi Yakiniku · 44 Trần Văn Trứ, Đà Nẵng · <a href="tel:0934971972">0934 971 972</a>
+  </footer>
   <script src="/js/i18n.js"></script>
   <script>
-  window.PAGE_EN = {
-  "aEy": "About us",
-  "aH": "The story behind the name",
-  "aSub": "One name, one wish",
-  "g1": "beef",
-  "g2": "happiness · good fortune",
-  "p1h": "Two characters",
-  "p1": "Gyu Sachi joins two Chinese characters: <b>牛 (gyū)</b>, the ox or beef, and <b>幸 (sachi)</b>, happiness and good fortune.",
-  "p2h": "A simple wish",
-  "p2": "Put together, they make a simple wish: happiness that comes from a good piece of beef.",
-  "p3h": "Around one grill",
-  "p3": "Yakiniku means “grilled meat”. It is less about the dish than about gathering around one grill: someone picks up, someone turns, someone shares a portion with the next person.",
-  "p4h": "A table for the people you love",
-  "p4": "So at Gyu Sachi, every table is a small grill for your loved ones. We want booking to feel just as light: choose your exact table, get confirmation in a minute, then simply arrive and enjoy together.",
-  "end": "Beef · Happiness · Together",
-  "cta": "Book a table",
-  "menu": "See the menu"
-};
+    window.PAGE_EN = {
+      "aEy": "About us",
+      "aH": "GYUSACHI YAKINIKU",
+      "aSub": "Japanese grill &amp; hotpot buffet in Da Nang",
+      "g1": "beef",
+      "g2": "happiness · joy",
+      "s1": "Since",
+      "s2v": "Almost 5",
+      "s2": "years of growth",
+      "s3": "restaurants in Da Nang",
+      "e1": "Overview",
+      "h1": "A meeting place around the grill",
+      "o1": "Since November 2021, <b>GYUSACHI YAKINIKU</b> has been a Japanese grill and hotpot buffet restaurant group in Da Nang, bringing an authentic Yakiniku experience with a rich menu from grilled meats, seafood, sushi and sashimi to signature dishes.",
+      "o2": "More than a meal, GYUSACHI hopes to be the place where family, friends and colleagues gather and share warm moments around the grill. After almost 5 years of growth, the group now has 4 restaurants in central Da Nang:",
+      "b1": "Branch 1",
+      "b2": "Branch 2",
+      "b3": "Branch 3",
+      "b4": "Branch 4",
+      "bh": "Takes bookings on this website",
+      "e2": "Our brand story",
+      "h2": "Moments of togetherness",
+      "t1": "A good meal comes not only from quality ingredients, but also from the moments of togetherness it creates.",
+      "t2": "From the wish to bring Japanese grilling culture closer to Vietnamese diners, GYUSACHI was born to build a space where everyone can enjoy authentic dishes, attentive service, and memories to keep with family and friends.",
+      "t3": "Year after year, GYUSACHI keeps refining its menu, raising its service quality and expanding the group to bring a consistent experience at every branch.",
+      "e3": "What GYUSACHI means",
+      "h3": "Gyu Sachi",
+      "n0": "The name GYUSACHI joins two words, each with rich meaning:",
+      "n1": "<b>Gyu (牛)</b> means beef in Japanese, the symbol of grilled beef dishes, the soul of the Yakiniku style.",
+      "n2": "<b>Sachi (幸)</b> means happiness, joy and fulfilment.",
+      "n3": "Together, GYUSACHI means <b>“Beef and Happiness”</b>: where a great beef feast brings happiness and togetherness to every guest.",
+      "n4": "That is the value the brand aims for in every meal.",
+      "e4": "Our service philosophy",
+      "h4": "Omotenashi",
+      "f1": "GYUSACHI follows the Japanese spirit of hospitality, <b>Omotenashi</b>: refined, understanding care that comes from sincerity.",
+      "f2": "Your comfort is looked after in every small detail: a private corner of the table, grill plates replaced proactively, fire adjusted just right, and a warm welcome. The GYUSACHI team does not just serve, but accompanies you so you can fully relax and enjoy every moment.",
+      "f3": "We value dedication in every detail, from preparing ingredients and cooking to attentive, friendly and professional service.",
+      "f4": "GYUSACHI’s goal is for every guest to leave satisfied and wanting to come back.",
+      "e5": "Our quality commitment",
+      "h5": "Strict standards",
+      "q0": "To make every experience complete, GYUSACHI keeps strict standards:",
+      "q1": "<b>Fresh, quality ingredients</b>Grilled meats and seafood are carefully selected from reputable sources, keeping their natural flavour.",
+      "q2": "<b>Refined cooking</b>Our marinades and hotpot broth are developed in-house, keeping an authentic Japanese taste that also suits Vietnamese palates.",
+      "q3": "<b>Safety &amp; standards</b>Food preparation and hygiene control are carried out strictly every day.",
+      "q4": "<b>A consistent experience</b>The same quality of food and attentive service across the whole group.",
+      "e6": "Dining space",
+      "h6": "Contemporary Japanese spirit",
+      "k1": "Built in different phases, each GYUSACHI branch has its own architectural character: from cosy and private to open and modern.",
+      "k2": "Different in lines, they all share a contemporary Japanese spirit: warm wood, soft lighting, and a modern smoke extraction system that keeps your clothes fresh.",
+      "k3": "GYUSACHI suits every occasion:",
+      "c1": "Romantic dates",
+      "c2": "Family meals",
+      "c3": "Get-togethers",
+      "c4": "Hosting guests",
+      "end": "Beef · Happiness · Together",
+      "cta": "Book a table",
+      "menu": "See the menu"
+    };
   </script>
   <script src="/js/pagei18n.js"></script>
   <script src="/js/footer.js"></script>
 </body>
+
 </html>
