@@ -182,8 +182,14 @@ function slotRanges(slots, step) {
 }
 const phoneFmt = (p) => String(p).replace(/^(\d{4})(\d{3})(\d{3})$/, '$1 $2 $3');
 
+const SIGN = 'Gyu Sachi Yakiniku xin cảm ơn.';
+const THANKS = /\b(cam on|cam on nhieu|cam on nha|cam on ban|thanks|thank you|thank|tks|thank u|bye|tam biet)\b/;
+
 // Chuyển lỗi kiểm tra của hệ thống thành câu trả lời lịch sự, rõ ràng cho khách.
 function politeError(e, settings) {
+  return `${politeErrorBody(e, settings)} ${SIGN}`;
+}
+function politeErrorBody(e, settings) {
   const hot = phoneFmt(settings.hotline);
   switch (e.code) {
     case 'DATE_TOO_FAR': {
@@ -191,7 +197,7 @@ function politeError(e, settings) {
       return `Dạ hiện nhà hàng nhận đặt bàn trước tối đa ${settings.booking_window_days} ngày, tức đến hết ${fmtDate(last)}. Anh/chị vui lòng chọn một ngày trong khoảng này, hoặc liên hệ hotline ${hot} để được hỗ trợ ạ.`;
     }
     case 'DATE_IN_PAST':
-      return 'Dạ ngày này đã qua nên em chưa thể đặt bàn được ạ. Anh/chị vui lòng chọn ngày hôm nay hoặc những ngày sắp tới nhé.';
+      return 'Dạ anh/chị vui lòng chọn ngày khác vì ngày này đã qua nên không thể đặt bàn được ạ.';
     case 'INVALID_DATE':
       return 'Dạ em chưa hiểu rõ ngày anh/chị muốn đặt. Anh/chị vui lòng nhắn lại theo dạng "ngày mai", "thứ Bảy" hoặc "15/10" giúp em nhé ạ.';
     case 'INVALID_PARTY':
@@ -223,7 +229,7 @@ async function handle(senderId, rawText, opts = {}) {
 
   if (s && /\b(huy|thoi|khong dat|bo qua|thoat)\b/.test(n) && !CONFIRM.test(n)) {
     sessions.delete(senderId);
-    return { text: 'Dạ em đã hủy yêu cầu đặt bàn. Khi cần anh/chị cứ nhắn "đặt bàn" để em hỗ trợ lại nhé ạ.' };
+    return { text: 'Dạ em đã hủy yêu cầu đặt bàn. Khi cần anh/chị cứ nhắn "đặt bàn" để em hỗ trợ lại nhé ạ. ' + SIGN };
   }
 
   const settings = await getSettings();
@@ -246,6 +252,12 @@ async function handle(senderId, rawText, opts = {}) {
   const contact = s && (s.stage === 'contact' || s.stage === 'confirm' || (s.date && s.time && s.party)) ? takeContact(original) : { phone: null, name: null };
   const gotSlot = found.date || found.time || found.party;
   const isConfirm = !!s && s.stage === 'confirm' && CONFIRM.test(n) && !gotSlot;
+
+  // Khách cảm ơn hoặc chào tạm biệt khi không đang đặt bàn dở: đáp lại lịch sự.
+  if ((!s || s.stage === 'slots' && !s.party && !s.date && !s.time) && THANKS.test(n) && !intent && !gotSlot) {
+    sessions.delete(senderId);
+    return { text: `Dạ không có chi ạ! Cảm ơn anh/chị đã quan tâm đến nhà hàng. Cần hỗ trợ thêm anh/chị cứ nhắn cho em nhé, hẹn gặp anh/chị tại nhà hàng ạ. ${SIGN}` };
+  }
 
   if (!s) {
     if (!intent && !(gotSlot && /\b(ban|cho)\b/.test(n))) return null; // không phải yêu cầu đặt bàn: để kịch bản từ khóa xử lý
@@ -283,7 +295,7 @@ async function handle(senderId, rawText, opts = {}) {
     if (!ok) {
       const slots = rules.slotsForDate(s.date, hours, settings);
       s.time = null; s.asking = 'time';
-      if (slots.length === 0) { s.date = null; s.asking = 'date'; return { text: 'Dạ ngày này nhà hàng không còn giờ nhận khách. Anh/chị chọn giúp em ngày khác nhé ạ.' }; }
+      if (slots.length === 0) { s.date = null; s.asking = 'date'; return { text: 'Dạ ngày này nhà hàng không còn giờ nhận khách. Anh/chị chọn giúp em ngày khác nhé ạ. ' + SIGN }; }
       const sample = slotRanges(slots, settings.slot_step_minutes);
       return { text: `Dạ ${fmtDate(s.date)} nhà hàng nhận khách trong khung giờ ${sample} (cách nhau 30 phút). Anh/chị muốn đến lúc nào ạ?` };
     }
@@ -317,7 +329,7 @@ async function handle(senderId, rawText, opts = {}) {
       const t0 = s.time; s.time = null; s.asking = 'time';
       if (alt.length) return { text: `Dạ rất tiếc, lúc ${t0} ${fmtDate(s.date)} đã hết bàn cho ${s.party} khách. Các giờ còn bàn gần nhất: ${alt.join(', ')}. Anh/chị chọn giờ nào ạ?` };
       s.date = null; s.asking = 'date';
-      return { text: `Dạ rất tiếc, ngày đó đã hết bàn cho ${s.party} khách. Anh/chị chọn giúp em ngày khác nhé, hoặc gọi hotline ${phoneFmt(settings.hotline)} ạ.` };
+      return { text: `Dạ rất tiếc, ngày đó đã hết bàn cho ${s.party} khách. Anh/chị chọn giúp em ngày khác nhé, hoặc gọi hotline ${phoneFmt(settings.hotline)} ạ. ${SIGN}` };
     }
     s.tableId = table.id; s.tableCode = table.code; s.floor = table.floor; s.stage = 'contact';
     const label = `bàn ${table.code.toUpperCase()} (tầng ${table.floor})`;
@@ -349,7 +361,7 @@ async function finish(senderId, s, settings, hours) {
       rawRequest: { bot: true, party: s.party, date: s.date, time: s.time, tableId: s.tableId },
     });
     sessions.delete(senderId);
-    return { text: `Dạ em đã giữ bàn thành công ạ!\nMã đặt bàn: ${r.bookingCode}\n${summary(s)}\nBàn được giữ ${settings.hold_minutes} phút kể từ giờ hẹn. Anh/chị tra cứu hoặc hủy trên website bằng số điện thoại và mã đặt bàn. Hẹn gặp anh/chị tại Gyu Sachi ạ!`, bookingCode: r.bookingCode };
+    return { text: `Dạ em đã giữ bàn thành công ạ!\nMã đặt bàn: ${r.bookingCode}\n${summary(s)}\nBàn được giữ ${settings.hold_minutes} phút kể từ giờ hẹn. Anh/chị tra cứu hoặc hủy trên website bằng số điện thoại và mã đặt bàn. Hẹn gặp anh/chị tại nhà hàng ạ!\nGyu Sachi Yakiniku xin chân thành cảm ơn anh/chị đã đặt bàn.`, bookingCode: r.bookingCode };
   } catch (e) {
     if (e.status === 409 || e.code === '23P01') {
       // Bàn vừa bị người khác đặt: tìm lại.
@@ -361,7 +373,7 @@ async function finish(senderId, s, settings, hours) {
       }
       const alt = await nearestSlots(s.date, s.time, s.party, settings, hours);
       s.time = null; s.asking = 'time';
-      return { text: alt.length ? `Dạ giờ đó vừa hết bàn ạ. Các giờ còn bàn: ${alt.join(', ')}. Anh/chị chọn giờ nào ạ?` : `Dạ ngày đó vừa hết bàn, anh/chị gọi hotline ${phoneFmt(settings.hotline)} giúp em nhé ạ.` };
+      return { text: alt.length ? `Dạ giờ đó vừa hết bàn ạ. Các giờ còn bàn: ${alt.join(', ')}. Anh/chị chọn giờ nào ạ?` : `Dạ ngày đó vừa hết bàn, anh/chị gọi hotline ${phoneFmt(settings.hotline)} giúp em nhé ạ. ${SIGN}` };
     }
     if (e.status && e.status < 500) { s.stage = 'contact'; if (/điện thoại/.test(e.message)) s.phone = null; if (/họ tên/.test(e.message)) s.name = null; return { text: politeError(e, settings) }; }
     throw e;
