@@ -38,14 +38,14 @@
       note: 'Giá buffet mỗi khách, chưa gồm VAT. Hình ảnh món ăn chỉ mang tính minh hoạ. Bấm vào trang để phóng to.',
       cta: 'Đặt bàn ngay', page: 'Trang', of: 'trên', prev: 'Trang trước', next: 'Trang sau', hint: 'Dùng phím ← → hoặc vuốt để lật trang',
       perGuest: '/ KHÁCH', city: 'ĐÀ NẴNG', menu: 'THỰC ĐƠN BUFFET',
-      promo: 'Ưu đãi: đi 4 tính 3, áp dụng cho buffet từ 349K trở lên.', pT: 'Ưu đãi nhóm', pBig: 'ĐI 4 TÍNH 3', pS1: 'Áp dụng cho buffet từ 349K trở lên', pS2: 'Nhóm 4 khách chỉ tính tiền 3 khách.', pS3: 'Chi tiết vui lòng gọi 0934 971 972', cT: 'Buffet Coca', cS: 'Dành cho buổi trưa', 
+      promo: 'Ưu đãi: đi 4 tính 3, buffet từ 349K trở lên, cả ngày thứ 2 đến thứ 5, thứ 6, 7, CN từ sáng đến 16:00 (trừ ngày lễ).', pT: 'Ưu đãi nhóm', pBig: 'ĐI 4 TÍNH 3', pS1: 'Áp dụng cho buffet từ 349K trở lên', pS2: 'Nhóm 4 khách chỉ tính tiền 3 khách. Áp dụng cả ngày thứ Hai đến thứ Năm; thứ Sáu, thứ Bảy, Chủ nhật chỉ áp dụng từ sáng đến 16:00. Không áp dụng ngày lễ.', pS3: 'Chi tiết vui lòng gọi 0934 971 972', cT: 'Buffet Coca', cS: 'Dành cho buổi trưa',
     },
     en: {
       eyebrow: 'Menu', title: 'Menu', lead: 'Pick a menu, then turn the pages: from starters to mains and sides.',
       note: 'Buffet price per guest, VAT not included. Photos are for illustration only. Tap a page to zoom in.',
       cta: 'Book a table', page: 'Page', of: 'of', prev: 'Previous page', next: 'Next page', hint: 'Use the ← → keys or swipe to turn pages',
       perGuest: '/ GUEST', city: 'DA NANG', menu: 'BUFFET MENU',
-      promo: 'Offer: dine 4, pay for 3, on buffets from 349K up.', pT: 'Group offer', pBig: 'DINE 4, PAY 3', pS1: 'On buffets from 349K up', pS2: 'A group of 4 pays for 3 guests.', pS3: 'For details please call 0934 971 972', cT: 'Coca buffet', cS: 'Lunchtime only', 
+      promo: 'Offer: dine 4, pay for 3, on buffets from 349K up, all day Mon to Thu, Fri, Sat, Sun until 4 PM (excl. public holidays).', pT: 'Group offer', pBig: 'DINE 4, PAY 3', pS1: 'On buffets from 349K up', pS2: 'A group of 4 pays for 3 guests. Valid all day Monday to Thursday; Friday, Saturday and Sunday from opening until 4:00 PM only. Not available on public holidays.', pS3: 'For details please call 0934 971 972', cT: 'Coca buffet', cS: 'Lunchtime only',
     },
   };
   const $ = (id) => document.getElementById(id);
