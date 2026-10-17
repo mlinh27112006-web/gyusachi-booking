@@ -7,6 +7,7 @@ const reservationService = require('./reservationService');
 const tableService = require('./tableService');
 const db = require('../db');
 const { getSettings, getOpeningHours } = require('../settings');
+const config = require('../config');
 
 const TTL_MS = 20 * 60 * 1000;
 const sessions = new Map();
@@ -94,6 +95,9 @@ function takeContact(original) {
 
 const CONFIRM = /^(ok|oke|okay|dong y|xac nhan|chot|dung roi|vang|da|yes|y|duoc|ok nhe|ok em|ok ban|chot nhe)\b/;
 const BOOK_INTENT = /\b(dat ban|dat cho|giu ban|giu cho|book|booking|dat truoc|con ban|con cho)\b/;
+const MAP_INTENT = /\b(so do|xem ban|xem cho|hinh ban|vi tri ban|chon ban|ban nao|ban trong|ban con trong)\b/;
+const CHANGE_TABLE = /\b(doi ban|ban khac|doi cho|cho khac|chon lai ban)\b/;
+const TABLE_CODE = /\bban\s*([a-z]\d{1,2})\b/;
 
 // Lượt đặt từ fanpage bắt buộc có người tạo (ràng buộc của cơ sở dữ liệu), nên bot dùng một tài khoản hệ thống
 // không đăng nhập được (khóa sẵn, mật khẩu không hợp lệ). Tài khoản tự tạo ở lần đặt bàn đầu tiên.
@@ -132,11 +136,37 @@ async function nearestSlots(date, time, party, settings, hours) {
   return withDist.sort((a, b) => a.d - b.d).slice(0, 3).map((x) => x.t).sort();
 }
 
-async function findTable(s, settings, hours) {
+// Danh sách bàn còn trống đúng giờ, đúng số khách (xếp theo tầng, số chỗ, mã bàn).
+async function freeTables(s, settings, hours) {
   const start = rules.validateSlot(s.date, s.time, settings, hours);
   const { tables } = await tableService.getTableMap({ start, holdMinutes: settings.hold_minutes, party: s.party });
-  const free = tables.filter((t) => t.selectable).sort((a, b) => a.capacity - b.capacity || a.code.localeCompare(b.code));
-  return { start, table: free[0] || null };
+  const free = tables.filter((t) => t.selectable).sort((a, b) => a.floor - b.floor || a.capacity - b.capacity || a.code.localeCompare(b.code));
+  return { start, free };
+}
+
+// Chọn bàn: ưu tiên bàn khách yêu cầu (nếu còn trống), bỏ qua các bàn khách đã bảo đổi, còn lại chọn bàn vừa chỗ nhất.
+async function findTable(s, settings, hours) {
+  const { start, free } = await freeTables(s, settings, hours);
+  const byCap = [...free].sort((a, b) => a.capacity - b.capacity || a.code.localeCompare(b.code));
+  let table = null; let miss = null; let chosen = false;
+  if (s.wantCode) {
+    table = free.find((t) => t.code.toLowerCase() === s.wantCode) || null;
+    if (table) chosen = true; else miss = s.wantCode;
+    s.wantCode = null;
+  }
+  if (!table) table = byCap.find((t) => !(s.skip || []).includes(t.code)) || null;
+  if (!table && byCap.length && (s.skip || []).length) { s.skip = []; table = byCap.find((t) => t.code === s.prevCode) || byCap[0]; }
+  return { start, table, free, miss, chosen };
+}
+
+const publicBase = () => config.publicUrl || 'https://gyusachi.vn';
+// Danh sách bàn còn trống theo tầng + đường dẫn mở sơ đồ bàn trên website (đã điền sẵn ngày, giờ, số khách).
+function tableListText(free, s) {
+  const byFloor = {};
+  for (const t of free) (byFloor[t.floor] = byFloor[t.floor] || []).push(`${t.code.toUpperCase()} (${t.capacity} chỗ)`);
+  const lines = Object.keys(byFloor).sort().map((f) => `• Tầng ${f}: ${byFloor[f].slice(0, 10).join(', ')}${byFloor[f].length > 10 ? '…' : ''}`);
+  const link = `${publicBase()}/book.html?date=${s.date}&time=${s.time}&party=${s.party}`;
+  return `Các bàn còn trống lúc ${s.time} ${fmtDate(s.date)} cho ${s.party} khách:\n${lines.join('\n')}\nAnh/chị nhắn "bàn ${(free[0] || { code: 'a2' }).code.toUpperCase()}" để chọn bàn đó, hoặc nhắn "đổi bàn" để em gợi ý bàn khác. Muốn xem sơ đồ và chọn bàn trực tiếp: ${link}`;
 }
 
 // Gộp các giờ liên tiếp thành khoảng, ví dụ "10:30–13:00 và 16:30–21:00".
@@ -152,13 +182,44 @@ function slotRanges(slots, step) {
 }
 const phoneFmt = (p) => String(p).replace(/^(\d{4})(\d{3})(\d{3})$/, '$1 $2 $3');
 
+// Chuyển lỗi kiểm tra của hệ thống thành câu trả lời lịch sự, rõ ràng cho khách.
+function politeError(e, settings) {
+  const hot = phoneFmt(settings.hotline);
+  switch (e.code) {
+    case 'DATE_TOO_FAR': {
+      const last = rules.addDays(rules.vnNow().date, settings.booking_window_days);
+      return `Dạ hiện nhà hàng nhận đặt bàn trước tối đa ${settings.booking_window_days} ngày, tức đến hết ${fmtDate(last)}. Anh/chị vui lòng chọn một ngày trong khoảng này, hoặc liên hệ hotline ${hot} để được hỗ trợ ạ.`;
+    }
+    case 'DATE_IN_PAST':
+      return 'Dạ ngày này đã qua nên em chưa thể đặt bàn được ạ. Anh/chị vui lòng chọn ngày hôm nay hoặc những ngày sắp tới nhé.';
+    case 'INVALID_DATE':
+      return 'Dạ em chưa hiểu rõ ngày anh/chị muốn đặt. Anh/chị vui lòng nhắn lại theo dạng "ngày mai", "thứ Bảy" hoặc "15/10" giúp em nhé ạ.';
+    case 'INVALID_PARTY':
+      return 'Dạ anh/chị cho em xin số lượng khách (ví dụ "4 người") để em kiểm tra bàn phù hợp nhé ạ.';
+    case 'PARTY_TOO_LARGE':
+      return `Dạ với nhóm trên ${settings.max_online_party_size} khách, nhà hàng cần sắp xếp riêng. Anh/chị vui lòng liên hệ hotline ${hot} để được hỗ trợ tốt nhất ạ.`;
+    case 'INVALID_PHONE':
+      return 'Dạ số điện thoại chưa đúng định dạng. Anh/chị vui lòng gửi lại số gồm 10 chữ số (ví dụ 0905 123 456) giúp em nhé ạ.';
+    case 'INVALID_NAME':
+      return 'Dạ anh/chị vui lòng cho em xin họ tên để em ghi nhận đặt bàn nhé ạ.';
+    case 'INVALID_TIME':
+      return 'Dạ nhà hàng không nhận khách vào giờ này. Anh/chị vui lòng chọn giờ khác trong khung giờ mở cửa giúp em nhé ạ.';
+    default:
+      return `Dạ ${e.message}. Anh/chị vui lòng kiểm tra lại giúp em nhé ạ.`;
+  }
+}
+
 const summary = (s) => `• ${s.party} khách\n• ${fmtDate(s.date)}, ${s.time}\n• Bàn ${s.tableCode.toUpperCase()} (tầng ${s.floor})\n• ${s.name} – ${s.phone}`;
 
 async function handle(senderId, rawText, opts = {}) {
   const original = String(rawText || '').trim();
   let n = norm(original);
   let s = getSession(senderId);
-  const intent = BOOK_INTENT.test(n);
+  const tableCodeM = TABLE_CODE.exec(n);
+  const wantChange = CHANGE_TABLE.test(n);
+  const wantMap = MAP_INTENT.test(n);
+  const tableTalk = wantChange || wantMap || !!tableCodeM;
+  const intent = BOOK_INTENT.test(n) || tableTalk;
 
   if (s && /\b(huy|thoi|khong dat|bo qua|thoat)\b/.test(n) && !CONFIRM.test(n)) {
     sessions.delete(senderId);
@@ -195,19 +256,27 @@ async function handle(senderId, rawText, opts = {}) {
 
   if (isConfirm) return finish(senderId, s, settings, hours);
 
+  // Khách muốn chọn bàn theo mã, đổi bàn khác hoặc xem sơ đồ bàn.
+  if (tableCodeM) s.wantCode = tableCodeM[1];
+  if (wantMap) s.wantMap = true;
+  if (s.tableCode && !gotSlot && (wantChange || (tableCodeM && tableCodeM[1] !== s.tableCode.toLowerCase()))) {
+    if (wantChange) s.skip = [...(s.skip || []), s.tableCode];
+    s.prevCode = s.tableCode; s.tableCode = null; s.stage = 'slots'; s.changing = true;
+  }
+
   if (found.party) s.party = found.party;
   if (found.date) s.date = found.date;
   if (found.time) s.time = found.time;
   if (contact.phone) s.phone = contact.phone;
-  if (contact.name && !gotSlot) s.name = contact.name;
-  if (gotSlot) { s.stage = 'slots'; s.tableCode = null; }
+  if (contact.name && !gotSlot && !tableTalk) s.name = contact.name;
+  if (gotSlot) { s.stage = 'slots'; s.tableCode = null; s.skip = []; s.changing = false; }
 
   // Kiểm tra từng phần.
   if (s.party != null) {
-    try { rules.validateParty(s.party, settings); } catch (e) { s.party = null; s.asking = 'party'; return { text: `${e.message.replace(/\b(\d{4})(\d{3})(\d{3})\b/, "$1 $2 $3")} ạ.` }; }
+    try { rules.validateParty(s.party, settings); } catch (e) { s.party = null; s.asking = 'party'; return { text: politeError(e, settings) }; }
   }
   if (s.date) {
-    try { rules.validateDate(s.date, settings); } catch (e) { s.date = null; s.asking = 'date'; return { text: `${e.message}. Anh/chị chọn giúp em ngày khác (ví dụ "mai", "thứ 7", "15/10") ạ.` }; }
+    try { rules.validateDate(s.date, settings); } catch (e) { s.date = null; s.asking = 'date'; return { text: politeError(e, settings) }; }
   }
   if (s.date && s.time) {
     const ok = rules.slotsForDate(s.date, hours, settings).includes(s.time);
@@ -232,9 +301,17 @@ async function handle(senderId, rawText, opts = {}) {
     return { text: `${known.length ? `Dạ em ghi nhận ${known.join(', ')}. ` : 'Dạ em hỗ trợ đặt bàn ngay ạ. '}Anh/chị cho em xin ${missing.map((k) => label[k]).join(' và ')} nhé.` };
   }
 
+  // Khách chỉ muốn xem bàn trống (chưa đổi bàn): gửi danh sách và đường dẫn sơ đồ.
+  if (s.tableCode && s.wantMap && !s.changing) {
+    const { free } = await freeTables(s, settings, hours);
+    s.wantMap = false;
+    return { text: `Dạ hiện em đang xếp bàn ${s.tableCode.toUpperCase()} (tầng ${s.floor}) cho anh/chị. ${tableListText(free, s)}` };
+  }
+
   // Đủ số khách, ngày, giờ: tìm bàn.
+  let pre = '';
   if (!s.tableCode) {
-    const { table } = await findTable(s, settings, hours);
+    const { table, free, miss, chosen } = await findTable(s, settings, hours);
     if (!table) {
       const alt = await nearestSlots(s.date, s.time, s.party, settings, hours);
       const t0 = s.time; s.time = null; s.asking = 'time';
@@ -243,16 +320,22 @@ async function handle(senderId, rawText, opts = {}) {
       return { text: `Dạ rất tiếc, ngày đó đã hết bàn cho ${s.party} khách. Anh/chị chọn giúp em ngày khác nhé, hoặc gọi hotline ${phoneFmt(settings.hotline)} ạ.` };
     }
     s.tableId = table.id; s.tableCode = table.code; s.floor = table.floor; s.stage = 'contact';
+    const label = `bàn ${table.code.toUpperCase()} (tầng ${table.floor})`;
+    if (miss) pre += `Dạ bàn ${miss.toUpperCase()} giờ đó không còn trống hoặc không đủ chỗ, em xếp ${label} thay thế ạ. `;
+    else if (chosen) pre += `Dạ em chọn ${label} theo ý anh/chị ạ. `;
+    else if (s.changing) pre += table.code === s.prevCode ? `Dạ giờ này chỉ còn đúng ${label} thôi ạ. ` : `Dạ em đã đổi sang ${label} ạ. `;
+    if (miss || s.changing || s.wantMap) pre += `\n${tableListText(free, s)}\n`;
+    s.changing = false; s.wantMap = false; s.prevCode = null;
   }
 
   if (!s.name || !s.phone) {
     s.asking = 'contact';
     const need = !s.name && !s.phone ? 'họ tên và số điện thoại' : !s.name ? 'họ tên' : 'số điện thoại';
-    return { text: `Dạ còn bàn ${s.tableCode.toUpperCase()} (tầng ${s.floor}) cho ${s.party} khách, ${fmtDate(s.date)} lúc ${s.time}. Anh/chị cho em xin ${need} để giữ bàn ạ.` };
+    return { text: pre ? `${pre}\nAnh/chị cho em xin ${need} để giữ bàn ạ.` : `Dạ còn bàn ${s.tableCode.toUpperCase()} (tầng ${s.floor}) cho ${s.party} khách, ${fmtDate(s.date)} lúc ${s.time}. Anh/chị cho em xin ${need} để giữ bàn ạ.` };
   }
 
   s.stage = 'confirm';
-  return { text: `Dạ em xin xác nhận thông tin đặt bàn:\n${summary(s)}\nAnh/chị nhắn "ok" để em chốt giữ bàn nhé, hoặc nhắn lại phần cần đổi. Nhắn "hủy" để dừng ạ.` };
+  return { text: `${pre ? `${pre}\n` : ''}Dạ em xin xác nhận thông tin đặt bàn:\n${summary(s)}\nAnh/chị nhắn "ok" để em chốt giữ bàn nhé, hoặc nhắn lại phần cần đổi. Nhắn "hủy" để dừng ạ.` };
 }
 
 async function finish(senderId, s, settings, hours) {
@@ -280,7 +363,7 @@ async function finish(senderId, s, settings, hours) {
       s.time = null; s.asking = 'time';
       return { text: alt.length ? `Dạ giờ đó vừa hết bàn ạ. Các giờ còn bàn: ${alt.join(', ')}. Anh/chị chọn giờ nào ạ?` : `Dạ ngày đó vừa hết bàn, anh/chị gọi hotline ${phoneFmt(settings.hotline)} giúp em nhé ạ.` };
     }
-    if (e.status && e.status < 500) { s.stage = 'contact'; if (/điện thoại/.test(e.message)) s.phone = null; if (/họ tên/.test(e.message)) s.name = null; return { text: `Dạ ${e.message} ạ. Anh/chị gửi lại giúp em nhé.` }; }
+    if (e.status && e.status < 500) { s.stage = 'contact'; if (/điện thoại/.test(e.message)) s.phone = null; if (/họ tên/.test(e.message)) s.name = null; return { text: politeError(e, settings) }; }
     throw e;
   }
 }
