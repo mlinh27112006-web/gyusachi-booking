@@ -46,8 +46,8 @@
       footer: 'Gyu Sachi Yakiniku, 44 Trần Văn Trứ, Đà Nẵng',
       loading: 'Đang tải',
       lookupTitle: 'Tra cứu đặt bàn',
-      lookupLead: 'Nhập số điện thoại và mã đặt bàn (dạng GYU-1234) để xem hoặc hủy lượt đặt.',
-      codeLabel: 'Mã đặt bàn', codePh: 'GYU-1234',
+      lookupLead: 'Nhập số điện thoại và mã đặt bàn (dạng GYU-1510-0909, 4 số cuối là 4 số cuối số điện thoại của bạn) để xem hoặc hủy lượt đặt.',
+      codeLabel: 'Mã đặt bàn', codePh: 'GYU-1510-0909',
       findBtn: 'Tra cứu', finding: 'Đang tra cứu',
       status: 'Trạng thái',
       stConfirmed: 'Đã xác nhận', stCompleted: 'Đã hoàn thành', stNoShow: 'Không đến', stCancelled: 'Đã hủy',
@@ -102,8 +102,8 @@
       footer: 'Gyu Sachi Yakiniku, 44 Tran Van Tru, Da Nang',
       loading: 'Loading',
       lookupTitle: 'Find your booking',
-      lookupLead: 'Enter your phone number and booking code (like GYU-1234) to view or cancel a booking.',
-      codeLabel: 'Booking code', codePh: 'GYU-1234',
+      lookupLead: 'Enter your phone number and booking code (like GYU-1510-0909, the last 4 digits are the last 4 digits of your phone number) to view or cancel a booking.',
+      codeLabel: 'Booking code', codePh: 'GYU-1510-0909',
       findBtn: 'Find booking', finding: 'Searching',
       status: 'Status',
       stConfirmed: 'Confirmed', stCompleted: 'Completed', stNoShow: 'No-show', stCancelled: 'Cancelled',
@@ -131,7 +131,7 @@
     RETRY: 'The system is busy. Please try again.',
     NOT_FOUND: 'Booking not found. Check the phone number and booking code.',
     NOT_CANCELLABLE: 'This booking can no longer be cancelled online.',
-    INVALID_CODE: 'The booking code looks like GYU-1234.',
+    INVALID_CODE: 'The booking code looks like GYU-1510-0909 (the last 4 digits are the last 4 digits of your phone number).',
   };
 
   let lang = 'vi';

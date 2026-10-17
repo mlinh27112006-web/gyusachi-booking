@@ -3,6 +3,7 @@
   // Mỗi quyển được xếp theo thứ tự bữa ăn: khai vị, món chính, sushi, lẩu cơm mì, món phụ.
   const P = (n) => `p${n}.jpg`;
   const C = {
+    special: { jp: '特別', vi: 'Special menu', en: 'Special menu' },
     ap: { jp: '前菜', vi: 'Khai vị & salad', en: 'Starters & salad' },
     main: { jp: '焼肉', vi: 'Món chính', en: 'Mains' },
     sushi: { jp: '寿司', vi: 'Sushi & sashimi', en: 'Sushi & sashimi' },
@@ -25,9 +26,9 @@
     '199K': { label: { vi: 'Trưa 199K', en: 'Lunch 199K' }, cover: { img: 'cv-199.jpg' }, rules: true, parts: [['lunch', [{ wide: 'lunch199.jpg' }]]] },
     '269K': buffet({ img: 'cv-269-299.jpg' }, [['ap', [P(14)]], ['main', [P(4), P(10)]], ['sushi', [P(7)]], ['hot', [P(11)]], ['side', [P(8), P(2)]]]),
     '299K': buffet({ img: 'cv-269-299.jpg' }, [['ap', [P(15)]], ['main', [P(6), P(5)]], ['sushi', [P(13)]], ['hot', [P(12), P(16)]], ['side', [P(9), P(2)]]]),
-    '349K': buffet({ img: 'cv-349-389.jpg' }, [['ap', [P(31)]], ['main', [P(32), P(36)]], ['sushi', [P(23), P(25)]], ['hot', [P(18), P(19)]], ['side', [P(20), P(2)]]], true),
-    '389K': buffet({ img: 'cv-349-389.jpg' }, [['ap', [P(35), P(34)]], ['main', [P(27)]], ['sushi', [P(26), P(24), P(30)]], ['hot', [P(29), P(33)]], ['side', [P(28), P(2)]]], true),
-    '469K': buffet({ img: 'cv-469.jpg' }, [['ap', [P(44), P(47)]], ['main', [P(37), P(43), P(41), P(45), P(48)]], ['sushi', [P(38), P(40), P(49)]], ['hot', [P(46), P(39)]], ['side', [P(50), P(2)]]], true),
+    '349K': buffet({ img: 'cv-349-389.jpg' }, [['special', ['special-1.jpg', 'special-2.jpg']], ['ap', [P(31)]], ['main', [P(32), P(36)]], ['sushi', [P(23), P(25)]], ['hot', [P(18), P(19)]], ['side', [P(20), P(2)]]], true),
+    '389K': buffet({ img: 'cv-349-389.jpg' }, [['special', ['special-1.jpg', 'special-2.jpg']], ['ap', [P(35), P(34)]], ['main', [P(27)]], ['sushi', [P(26), P(24), P(30)]], ['hot', [P(29), P(33)]], ['side', [P(28), P(2)]]], true),
+    '469K': buffet({ img: 'cv-469.jpg' }, [['special', ['special-1.jpg', 'special-2.jpg']], ['ap', [P(44), P(47)]], ['main', [P(37), P(43), P(41), P(45), P(48)]], ['sushi', [P(38), P(40), P(49)]], ['hot', [P(46), P(39)]], ['side', [P(50), P(2)]]], true),
     carte: { label: { vi: 'Menu lẻ', en: 'À la carte' }, cover: { img: 'cv-carte.jpg' }, rules: false, parts: [['cap', ['la-starter.jpg', 'la-soup.jpg']], ['cmain', ['la-sets.jpg', 'la-beef.jpg', 'la-meat2.jpg', 'la-meat1.jpg']], ['csushi', ['la-sushi.jpg', 'la-sashimi.jpg']], ['chot', ['la-hotpot.jpg', 'la-noodle.jpg', 'la-rice.jpg']], ['cside', ['la-extra.jpg']], ['ccombo', ['cb-couple.jpg', 'cb-premium.jpg']]] },
     drinks: { label: { vi: 'Đồ uống', en: 'Drinks' }, cover: { img: 'cv-drinks.jpg' }, rules: false, parts: [['coca', [{ info: 'coca' }]], ['soft', ['bf-soft69.jpg']], ['alc', ['bf-alc139.jpg']], ['carte', ['dr-soda.jpg', 'dr-sake.jpg']]] },
   };

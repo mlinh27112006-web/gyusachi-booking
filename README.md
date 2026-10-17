@@ -10,7 +10,7 @@ Công nghệ: Node.js 22 + Express 4, PostgreSQL 14 trở lên, giao diện HTML
 
 | # | Phân hệ | Đã làm |
 |---|---|---|
-| 1 | Đặt bàn | Chọn ngày, số khách, giờ (bước 30 phút, đặt trước 7 ngày, cho đặt cùng ngày), chọn bàn trên sơ đồ 2 tầng, mã `GYU-xxxx`, tra cứu và hủy bằng số điện thoại + mã |
+| 1 | Đặt bàn | Chọn ngày, số khách, giờ (bước 30 phút, đặt trước 7 ngày, cho đặt cùng ngày), chọn bàn trên sơ đồ 2 tầng, mã `GYU-xxxx-yyyy` (yyyy là 4 số cuối SĐT khách), tra cứu và hủy bằng số điện thoại + mã |
 | 2 | Chống trùng lịch | Khóa mềm 5 phút khi khách đang điền form; ràng buộc `EXCLUDE` của PostgreSQL (không thể có hai lượt trùng bàn trùng giờ, kể cả khi hai người bấm cùng lúc); giao dịch + khóa theo từng bàn |
 | 3 | Xác thực, phân quyền | JWT 8 giờ, 5 vai trò, quyền đọc lại từ CSDL mỗi request (khóa tài khoản có hiệu lực ngay), khóa đăng nhập 5 phút sau 5 lần sai |
 | 4 | Quản lý nhân viên | Thêm, sửa họ tên và vai trò, đặt lại mật khẩu, khóa/mở khóa; quy tắc ai được quản ai |
@@ -37,7 +37,7 @@ Cần: Node.js 18 trở lên (khuyến nghị 22), PostgreSQL 14 trở lên (có
 
 Các địa chỉ: trang chủ http://localhost:3000/, thực đơn http://localhost:3000/menu.html, đặt bàn http://localhost:3000/book.html, tra cứu http://localhost:3000/lookup.html, quản trị http://localhost:3000/admin/
 
-Nếu bạn đã tạo CSDL từ phiên bản cũ (trước bước "khách đã về + dọn bàn"), chạy thêm một lần `db/migrations/002_cleanup_buffer.sql`. Cài mới hoàn toàn thì không cần.
+Nếu bạn đã tạo CSDL từ phiên bản cũ, chạy thêm một lần `db/migrations/002_cleanup_buffer.sql` (bước "khách đã về + dọn bàn") rồi `db/migrations/003_booking_code_phone.sql` (mã đặt bàn có 4 số cuối SĐT). Cài mới hoàn toàn thì không cần.
 
 **Lỗi thường gặp**
 - `password authentication failed`: sai mật khẩu trong `DATABASE_URL`.
@@ -78,6 +78,7 @@ Khách không cần điền form: chỉ nhắn một câu tự nhiên, bot tự 
 - **Hiểu câu tiếng Việt, kể cả không dấu**: "đặt bàn 4 người 7h tối mai", "dat ban 6 nguoi thu 7 11h30", "2 khách 19:30 ngày 15/10". Tách được số khách, ngày (hôm nay, mai, ngày kia, thứ 2 đến chủ nhật, 15/10, ngày 15), giờ (19h, 7h tối, 19:30).
 - **Hội thoại nhiều bước**: hỏi phần còn thiếu, tìm bàn nhỏ nhất đủ chỗ (đúng quy tắc chọn bàn), xin họ tên và số điện thoại, tóm tắt rồi chờ khách nhắn "ok". Khách có thể nhắn lại để đổi giờ, số khách giữa chừng, hoặc "hủy" để dừng.
 - **Khi hết bàn**: bot gợi ý tối đa 3 giờ còn bàn gần nhất trong ngày. Giờ ngoài khung nhận khách, ngày quá xa, nhóm trên 8 khách đều có câu trả lời riêng.
+- **Đổi bàn, chọn bàn, xem sơ đồ**: khách nhắn "đổi bàn" thì bot gợi ý bàn khác; nhắn "bàn A2" thì bot giữ đúng bàn đó nếu còn trống (không thì xếp bàn thay thế); nhắn "xem sơ đồ bàn" thì bot liệt kê bàn còn trống theo tầng và gửi đường dẫn `/book.html?date=...&time=...&party=...`, trang đặt bàn tự điền sẵn ngày, giờ, số khách để khách chọn bàn trên sơ đồ. Đường dẫn lấy theo biến `PUBLIC_URL` trong `.env` (demo qua ngrok thì điền địa chỉ ngrok).
 - **An toàn**: lượt đặt đi qua đúng hàm tạo đặt bàn và ràng buộc chống trùng của hệ thống, nên không thể trùng bàn. Bàn bị người khác lấy mất đúng lúc chốt thì bot tự đổi bàn hoặc gợi ý giờ khác. Giới hạn 40 tin/phút mỗi IP cho khung chat web.
 - **Tài khoản hệ thống**: vì cơ sở dữ liệu bắt buộc lượt đặt ngoài website phải có người tạo, bot dùng tài khoản `bot_fanpage` ("Bot đặt bàn (chatbot)"), tự tạo ở lần đặt đầu tiên và bị khóa, không đăng nhập được.
 - **Trạng thái hội thoại** lưu trong bộ nhớ 20 phút (khởi động lại máy chủ thì khách nhắn "đặt bàn" lại từ đầu).
@@ -86,8 +87,8 @@ Khách không cần điền form: chỉ nhắn một câu tự nhiên, bot tự 
 ## 5. Kịch bản demo (khoảng 10 phút)
 
 0. **Giới thiệu** (`/`, `/menu.html`, `/recruitment.html`): trang chủ, bảng giá 6 mức buffet (bấm thẻ mở đúng quyển thực đơn), lật trang thực đơn, bấm ảnh để phóng to, trang Tuyển dụng, đổi VI/EN; thu nhỏ cửa sổ hoặc mở bằng điện thoại để thấy giao diện tự co theo màn hình.
-0b. **Bot đặt bàn**: bấm "Đặt bàn nhanh" ở góc phải, nhắn "đặt bàn 4 người 7h tối mai", làm theo bot đến khi nhận mã `GYU-xxxx` (xem mục "Bot đặt bàn bằng câu chat").
-1. **Khách đặt bàn trên website** (`/book.html`): chọn ngày, 4 khách, giờ tối; cho thấy chỉ các bàn 4 chỗ được bấm, bàn khác mờ; chọn bàn, thanh đếm ngược 5 phút hiện ra; nhập tên, số điện thoại, đặt bàn; ghi lại mã `GYU-xxxx`.
+0b. **Bot đặt bàn**: bấm "Đặt bàn nhanh" ở góc phải, nhắn "đặt bàn 4 người 7h tối mai", làm theo bot đến khi nhận mã `GYU-xxxx-yyyy` (xem mục "Bot đặt bàn bằng câu chat").
+1. **Khách đặt bàn trên website** (`/book.html`): chọn ngày, 4 khách, giờ tối; cho thấy chỉ các bàn 4 chỗ được bấm, bàn khác mờ; chọn bàn, thanh đếm ngược 5 phút hiện ra; nhập tên, số điện thoại, đặt bàn; ghi lại mã `GYU-xxxx-yyyy`.
 2. **Chống trùng**: mở thêm một cửa sổ ẩn danh, cùng ngày giờ đó, bàn vừa đặt đã xám và không bấm được. Có thể nói thêm: dù hai người bấm cùng lúc, ràng buộc `EXCLUDE` trong PostgreSQL vẫn chặn được.
 3. **Tra cứu và hủy** (`/lookup.html`): nhập số điện thoại và mã, xem thông tin, hủy; bàn lại trống.
 4. **Nhân viên hotline** (đăng nhập `hotline` tại `/admin/`): "Tạo đặt bàn hộ" cho khách gọi điện (6 khách, ghi chú sinh nhật); thấy menu của hotline ít mục hơn owner.
@@ -124,7 +125,7 @@ Hạn chế cần biết khi triển khai thật:
 - Token đăng nhập lưu ở `localStorage` (theo lựa chọn của đồ án); nếu trang có lỗ hổng XSS thì token có thể bị lấy.
 - API công khai đặt bàn và tra cứu chưa có giới hạn tần suất (rate limit); riêng khung chat bot đã giới hạn 40 tin/phút mỗi IP. Nên thêm cho các API còn lại khi đưa lên mạng.
 - Server chạy HTTP; triển khai thật cần đặt sau HTTPS (Nginx, Cloudflare...).
-- Mã đặt bàn `GYU-` cộng 4 chữ số chỉ có 10.000 giá trị, đủ cho đồ án; dùng lâu dài cần mở rộng độ dài.
+- Mã đặt bàn có dạng `GYU-1510-0909`: 4 số đầu là ngày khách đến (DDMM, 15/10 thành 1510) để khách dễ nhớ, 4 số cuối là 4 số cuối SĐT của khách để nhân viên đối chiếu nhanh khi khách đến. Nếu trùng mã (cùng ngày, cùng 4 số cuối SĐT) thì hệ thống tự đổi 4 số đầu sang số ngẫu nhiên. Mã cũ dạng `GYU-1234` vẫn tra cứu được. Tra cứu và hủy vẫn bắt buộc nhập đủ SĐT, nên biết mã chưa đủ để xem hay hủy lượt đặt của người khác.
 - Gửi tin Facebook thật chưa được thử với fanpage thật, chỉ thử bằng máy chủ Facebook giả.
 - Mật khẩu mẫu `Gyu@2026` và `JWT_SECRET` trong `.env.example` phải đổi trước khi dùng thật.
 
@@ -206,7 +207,7 @@ Từ khóa khớp không phân biệt hoa thường và dấu, theo từ nguyên
 - **Tổng quan hôm nay**: số lượt đặt, khách dự kiến, lượt trễ; danh sách khách đang chờ; tự làm mới mỗi 30 giây.
 - **Danh sách đặt bàn**: chọn ngày, lọc theo trạng thái/kênh, tìm theo tên, số điện thoại hoặc mã. Các nút *Khách đã đến*, *Khách đã về*, *Không đến*, *Hủy* chỉ hiện khi hợp lệ; thao tác quan trọng có hộp xác nhận.
 - Có thể đổi mật khẩu ngay trong trang. Trên điện thoại, bảng chuyển thành dạng thẻ.
-- **Tạo đặt bàn hộ**: chọn ngày, giờ, số khách, chọn bàn trên sơ đồ 2 tầng, nhập tên, số điện thoại, ghi chú. Quản lý trở lên chọn kênh hotline hoặc fanpage; nhân viên hotline/fanpage tự theo vai trò. Đặt xong hiện mã `GYU-xxxx` để đọc cho khách. Nếu bàn vừa bị người khác đặt thì báo lỗi và sơ đồ tự cập nhật.
+- **Tạo đặt bàn hộ**: chọn ngày, giờ, số khách, chọn bàn trên sơ đồ 2 tầng, nhập tên, số điện thoại, ghi chú. Quản lý trở lên chọn kênh hotline hoặc fanpage; nhân viên hotline/fanpage tự theo vai trò. Đặt xong hiện mã `GYU-xxxx-yyyy` để đọc cho khách. Nếu bàn vừa bị người khác đặt thì báo lỗi và sơ đồ tự cập nhật.
 - **Sơ đồ bàn**: xem từng giờ trong ngày, bàn trống / đã đặt chờ khách / đang dùng bàn; bấm bàn để xem khách và dùng các nút thao tác, hoặc bấm "Đặt bàn này" để sang màn tạo đặt bàn với bàn đã chọn sẵn.
 - **Báo cáo** (owner, admin, manager): chọn nhanh 7/30/90 ngày hoặc tự chọn khoảng ngày (tối đa 92 ngày); thẻ tổng quan, theo kênh, giờ cao điểm, theo ngày, mức dùng từng bàn, khách hay không đến.
 - **Nhân viên** (owner, admin): thêm tài khoản, sửa họ tên/vai trò, đặt lại mật khẩu, khóa/mở khóa (khóa có hiệu lực ngay). Không sửa được owner và chính mình; chỉ owner sửa được admin.

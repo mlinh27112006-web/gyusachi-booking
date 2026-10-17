@@ -24,7 +24,8 @@
   // Mã đặt bàn: tự viết hoa, tự thêm dấu gạch ngang sau GYU.
   function formatCode(v) {
     const raw = v.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    return raw.length > 3 ? `${raw.slice(0, 3)}-${raw.slice(3, 7)}` : raw;
+    if (raw.length <= 3) return raw;
+    return raw.length > 7 ? `${raw.slice(0, 3)}-${raw.slice(3, 7)}-${raw.slice(7, 11)}` : `${raw.slice(0, 3)}-${raw.slice(3, 7)}`;
   }
 
   function render() {

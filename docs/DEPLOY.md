@@ -60,6 +60,7 @@ Nếu báo lỗi `already exists` nghĩa là bảng đã được tạo từ l�
 | `DATABASE_URL` | Internal Database URL ở bước 2 |
 | `JWT_SECRET` | một chuỗi ngẫu nhiên dài (ví dụ gõ lung tung 40 ký tự) |
 | `FB_VERIFY_TOKEN` | `gyusachi-verify-token` (hoặc chuỗi bạn tự chọn) |
+| `PUBLIC_URL` | địa chỉ web Render cấp, ví dụ `https://gyusachi.onrender.com` (không có dấu `/` cuối). Bot dùng để gửi link sơ đồ bàn. Điền sau khi biết địa chỉ, rồi Restart |
 
    Hai biến `FB_APP_SECRET` và `FB_PAGE_ACCESS_TOKEN` để trống, điền sau khi nối Facebook.
    Không cần đặt `PORT`, Render tự cấp.
@@ -69,7 +70,7 @@ Mở đường dẫn Render cấp. Trang chủ hiện ra là thành công. Trang
 
 ## Bước 5. Kiểm tra sau khi lên mạng
 
-1. Mở `/book.html`, đặt thử một bàn, được mã `GYU-xxxx`.
+1. Mở `/book.html`, đặt thử một bàn, được mã `GYU-xxxx-yyyy`.
 2. Mở `/admin/`, đăng nhập `owner` với mật khẩu mẫu `Gyu@2026`, thấy lượt đặt vừa tạo.
 3. **Đổi ngay mật khẩu của mọi tài khoản mẫu** (menu Nhân viên, nút Đặt lại mật khẩu, hoặc Đổi mật khẩu ở góc dưới). Web đã công khai trên mạng nên không để mật khẩu mẫu.
 
@@ -85,4 +86,4 @@ Mở đường dẫn Render cấp. Trang chủ hiện ra là thành công. Trang
 
 ## Khi nào nối Facebook
 
-Sau khi web đã chạy ổn trên Render, xem hướng dẫn nối Facebook (đăng ký webhook tại `https://TEN-WEB-CUA-BAN.onrender.com/api/facebook/webhook`). Thêm hai biến `FB_APP_SECRET`, `FB_PAGE_ACCESS_TOKEN` vào Render rồi chọn **Manual Deploy > Restart** để máy chủ đọc biến mới.
+Sau khi web đã chạy ổn trên Render, xem hướng dẫn nối Facebook (đăng ký webhook tại `https://TEN-WEB-CUA-BAN.onrender.com/api/facebook/webhook`). Thêm hai biến `FB_APP_SECRET`, `FB_PAGE_ACCESS_TOKEN` vào Render rồi chọn **Manual Deploy > Restart** để máy chủ đọc biến mới. Ở Meta, đổi URL gọi lại của webhook từ địa chỉ ngrok sang địa chỉ Render (không cần ngrok nữa). Gói miễn phí của Render ngủ khi lâu không có người truy cập, nên mở web trước buổi demo vài phút để Facebook gửi tin tới là có phản hồi ngay.

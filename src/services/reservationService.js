@@ -32,7 +32,14 @@ function toDto(row) {
   };
 }
 
-const randomCode = () => `GYU-${String(crypto.randomInt(0, 10000)).padStart(4, '0')}`;
+// Mã đặt bàn dạng GYU-1510-0909: 4 số đầu là ngày khách đến (DDMM, khách dễ nhớ), 4 số cuối là 4 số cuối SĐT khách
+// (nhân viên đối chiếu nhanh khi khách đến). Nếu mã bị trùng (cùng ngày và cùng 4 số cuối SĐT) thì thử lại với 4 số đầu ngẫu nhiên.
+const makeCode = (phone, start, attempt = 0) => {
+  const tail = String(phone || '').replace(/\D/g, '').slice(-4).padStart(4, '0');
+  const m = /^\d{4}-(\d{2})-(\d{2})/.exec(String(start || ''));
+  const head = attempt === 0 && m ? `${m[2]}${m[1]}` : String(crypto.randomInt(0, 10000)).padStart(4, '0');
+  return `GYU-${head}-${tail}`;
+};
 
 // Tạo đặt bàn. Dùng chung cho cả ba kênh:
 //   source 'website'  khách tự đặt, bắt buộc có khóa mềm còn hạn và bàn phải đúng nhóm theo số khách
@@ -42,7 +49,7 @@ async function create(input) {
   try {
     for (let attempt = 0; attempt < 5; attempt += 1) {
       try {
-        return await db.withTransaction((client) => createInTransaction(client, input));
+        return await db.withTransaction((client) => createInTransaction(client, input, attempt));
       } catch (err) {
         // Trùng mã đặt bàn (hiếm): thử lại với mã khác.
         if (err.code === '23505' && err.constraint === 'reservations_booking_code_key') continue;
@@ -56,7 +63,7 @@ async function create(input) {
   }
 }
 
-async function createInTransaction(client, input) {
+async function createInTransaction(client, input, attempt = 0) {
   const { source, channel, tableId, party, start, holdMinutes, note, lockToken, customer, staffUser, rawRequest, externalUserId } = input;
 
   // Xếp hàng theo từng bàn: các lượt đặt cùng bàn được xử lý lần lượt, tránh deadlock
@@ -107,7 +114,7 @@ async function createInTransaction(client, input) {
        (booking_code, customer_id, table_id, party_size, start_time, end_time, channel, note, created_by)
      VALUES ($1, $2, $3, $4, $5::timestamptz, $5::timestamptz + make_interval(mins => $6::int), $7, $8, $9)
      RETURNING id`,
-    [randomCode(), cust.rows[0].id, tableId, party, start, holdMinutes, channel, note, staffUser ? staffUser.id : null]
+    [makeCode(customer.phone, start, attempt), cust.rows[0].id, tableId, party, start, holdMinutes, channel, note, staffUser ? staffUser.id : null]
   );
   const reservationId = inserted.rows[0].id;
 

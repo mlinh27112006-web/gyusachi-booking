@@ -104,7 +104,7 @@ async function cancel(req, res, next) {
 
 function normalizeCode(raw) {
   const code = String(raw || '').trim().toUpperCase();
-  if (!/^GYU-\d{4}$/.test(code)) throw new AppError(400, 'Mã đặt bàn có dạng GYU-1234', 'INVALID_CODE');
+  if (!/^GYU-\d{4}(-\d{4})?$/.test(code)) throw new AppError(400, 'Mã đặt bàn có dạng GYU-1510-0909 (4 số cuối là 4 số cuối số điện thoại của bạn)', 'INVALID_CODE');
   return code;
 }
 

@@ -86,7 +86,7 @@ CREATE TABLE staff (
 -- ---------------------------------------------------------------------
 CREATE TABLE reservations (
     id            serial PRIMARY KEY,
-    booking_code  varchar(8) NOT NULL UNIQUE CHECK (booking_code ~ '^GYU-[0-9]{4}$'),
+    booking_code  varchar(13) NOT NULL UNIQUE CHECK (booking_code ~ '^GYU-[0-9]{4}(-[0-9]{4})?$'), -- GYU-4827-0909: 4 số cuối của mã = 4 số cuối SĐT khách
     customer_id   integer NOT NULL REFERENCES customers(id),
     table_id      integer NOT NULL REFERENCES dining_tables(id),
     party_size    smallint NOT NULL CHECK (party_size BETWEEN 1 AND 8),
