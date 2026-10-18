@@ -2,7 +2,7 @@
 
 Đồ án: website đặt bàn cho nhà hàng **Gyu Sachi Yakiniku, 44 Trần Văn Trứ, Đà Nẵng** (hotline 0934971972). Khách đặt bàn qua website, nhân viên đặt hộ khách gọi hotline hoặc nhắn fanpage, tất cả cùng một sơ đồ bàn nên không bao giờ trùng bàn trùng giờ.
 
-Trang khách gồm trang chủ (bảng giá, ưu đãi "đi 4 tính 3" cho buffet từ 349K, bản đồ Google, bộ đếm lượt đặt trong tháng), Về chúng tôi, thực đơn dạng quyển sách lật trang (buffet trưa 199K, các mức 269K, 299K, 349K, 389K, 469K, Menu lẻ, Đồ uống), đặt bàn, tra cứu, Tuyển dụng và khung chat đặt bàn nhanh; giao diện song ngữ Việt/Anh, co giãn theo điện thoại và máy tính. Mặt bằng sơ đồ bàn vẽ theo nhà hàng thật, tọa độ nằm ở `public/js/floorplan.js`; ảnh thực đơn ở `public/img/menu`, danh sách trang từng mức giá ở `public/js/menu.js`.
+Trang khách gồm trang chủ (bảng giá, ưu đãi "đi 4 tính 3" cho buffet từ 349K, bản đồ Google, bộ đếm lượt đặt trong tháng), Về chúng tôi, thực đơn dạng quyển sách lật trang (buffet trưa 219K, các mức 269K, 299K, 349K, 389K, 469K, Menu lẻ, Đồ uống), đặt bàn, tra cứu, Tuyển dụng và khung chat đặt bàn nhanh; giao diện song ngữ Việt/Anh, co giãn theo điện thoại và máy tính. Mặt bằng sơ đồ bàn vẽ theo nhà hàng thật, tọa độ nằm ở `public/js/floorplan.js`; ảnh thực đơn ở `public/img/menu`, danh sách trang từng mức giá ở `public/js/menu.js`.
 
 Công nghệ: Node.js 22 + Express 4, PostgreSQL 14 trở lên, giao diện HTML/CSS/JavaScript thuần (không dùng framework).
 
@@ -37,7 +37,7 @@ Cần: Node.js 18 trở lên (khuyến nghị 22), PostgreSQL 14 trở lên (có
 
 Các địa chỉ: trang chủ http://localhost:3000/, thực đơn http://localhost:3000/menu.html, đặt bàn http://localhost:3000/book.html, tra cứu http://localhost:3000/lookup.html, quản trị http://localhost:3000/admin/
 
-Nếu bạn đã tạo CSDL từ phiên bản cũ, chạy thêm một lần `db/migrations/002_cleanup_buffer.sql` (bước "khách đã về + dọn bàn") rồi `db/migrations/003_booking_code_phone.sql` (mã đặt bàn có 4 số cuối SĐT). Cài mới hoàn toàn thì không cần.
+Nếu bạn đã tạo CSDL từ phiên bản cũ, chạy thêm một lần `db/migrations/002_cleanup_buffer.sql` (bước "khách đã về + dọn bàn") rồi `db/migrations/003_booking_code_phone.sql` (mã đặt bàn có 4 số cuối SĐT). Không có `psql` thì chạy bằng Node: `npm.cmd run db:run -- db/migrations/003_booking_code_phone.sql`. Cài mới hoàn toàn thì không cần.
 
 **Lỗi thường gặp**
 - `password authentication failed`: sai mật khẩu trong `DATABASE_URL`.

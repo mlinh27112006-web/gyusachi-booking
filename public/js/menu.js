@@ -14,22 +14,22 @@
     alc: { jp: '酒', vi: 'Buffet rượu & bia', en: 'Wine & beer buffet' },
     carte: { jp: '飲', vi: 'Đồ uống gọi lẻ', en: 'Drinks à la carte' },
     coca: { jp: 'コーラ', vi: 'Buffet Coca trưa', en: 'Lunch Coca buffet' },
-    cap: { jp: '前菜', vi: 'Khai vị, salad & soup', en: 'Starters, salad & soup' },
+    cap: { jp: '前菜', vi: 'Khai vị & salad', en: 'Starters & salad' },
     cmain: { jp: '焼肉', vi: 'Thịt nướng & hải sản', en: 'Grilled meat & seafood' },
     csushi: { jp: '寿司', vi: 'Sushi & sashimi', en: 'Sushi & sashimi' },
-    chot: { jp: '鍋', vi: 'Lẩu, mì & cơm', en: 'Hot pot, noodles & rice' },
-    cside: { jp: '副菜', vi: 'Món ăn thêm', en: 'Extra dishes' },
+    chot: { jp: '鍋', vi: 'Lẩu, mì, soup, pizza & cơm', en: 'Hot pot, noodles, soup, pizza & rice' },
+    cside: { jp: '副菜', vi: 'Món ăn thêm & topping', en: 'Extra dishes & toppings' },
     ccombo: { jp: 'コンボ', vi: 'Combo', en: 'Combos' },
   };
   const buffet = (cover, list, promo) => ({ cover, rules: true, promo: !!promo, parts: list });
   const BOOKS = {
-    '199K': { label: { vi: 'Trưa 199K', en: 'Lunch 199K' }, cover: { img: 'cv-199.jpg' }, rules: true, parts: [['lunch', [{ wide: 'lunch199.jpg' }]]] },
+    '219K': { label: { vi: 'Trưa 219K', en: 'Lunch 219K' }, cover: { img: 'cv-219.jpg' }, rules: true, parts: [['lunch', [{ wide: 'lunch219-1.jpg' }, { wide: 'lunch219-2.jpg' }]]] },
     '269K': buffet({ img: 'cv-269-299.jpg' }, [['ap', [P(14)]], ['main', [P(4), P(10)]], ['sushi', [P(7)]], ['hot', [P(11)]], ['side', [P(8), P(2)]]]),
     '299K': buffet({ img: 'cv-269-299.jpg' }, [['ap', [P(15)]], ['main', [P(6), P(5)]], ['sushi', [P(13)]], ['hot', [P(12), P(16)]], ['side', [P(9), P(2)]]]),
     '349K': buffet({ img: 'cv-349-389.jpg' }, [['special', ['special-1.jpg', 'special-2.jpg']], ['ap', [P(31)]], ['main', [P(32), P(36)]], ['sushi', [P(23), P(25)]], ['hot', [P(18), P(19)]], ['side', [P(20), P(2)]]], true),
     '389K': buffet({ img: 'cv-349-389.jpg' }, [['special', ['special-1.jpg', 'special-2.jpg']], ['ap', [P(35), P(34)]], ['main', [P(27)]], ['sushi', [P(26), P(24), P(30)]], ['hot', [P(29), P(33)]], ['side', [P(28), P(2)]]], true),
     '469K': buffet({ img: 'cv-469.jpg' }, [['special', ['special-1.jpg', 'special-2.jpg']], ['ap', [P(44), P(47)]], ['main', [P(37), P(43), P(41), P(45), P(48)]], ['sushi', [P(38), P(40), P(49)]], ['hot', [P(46), P(39)]], ['side', [P(50), P(2)]]], true),
-    carte: { label: { vi: 'Menu lẻ', en: 'À la carte' }, cover: { img: 'cv-carte.jpg' }, rules: false, parts: [['cap', ['la-starter.jpg', 'la-soup.jpg']], ['cmain', ['la-sets.jpg', 'la-beef.jpg', 'la-meat2.jpg', 'la-meat1.jpg']], ['csushi', ['la-sushi.jpg', 'la-sashimi.jpg']], ['chot', ['la-hotpot.jpg', 'la-noodle.jpg', 'la-rice.jpg']], ['cside', ['la-extra.jpg']], ['ccombo', ['cb-couple.jpg', 'cb-premium.jpg']]] },
+    carte: { label: { vi: 'Menu lẻ', en: 'À la carte' }, cover: { img: 'cv-carte.jpg' }, rules: false, parts: [['cap', ['la-starter.jpg', 'la-salad.jpg']], ['cmain', ['la-sets.jpg', 'la-beef.jpg', 'la-meat2.jpg', 'la-meat1.jpg']], ['csushi', ['la-sushi.jpg', 'la-nigiri.jpg', 'la-sashimi.jpg']], ['chot', ['la-hotpot.jpg', 'la-noodle.jpg', 'la-rice.jpg']], ['cside', ['la-extra.jpg', 'la-topping.jpg']], ['ccombo', ['cb-couple.jpg', 'cb-premium.jpg']]] },
     drinks: { label: { vi: 'Đồ uống', en: 'Drinks' }, cover: { img: 'cv-drinks.jpg' }, rules: false, parts: [['coca', [{ info: 'coca' }]], ['soft', ['bf-soft69.jpg']], ['alc', ['bf-alc139.jpg']], ['carte', ['dr-soda.jpg', 'dr-sake.jpg']]] },
   };
   const TXT = {
@@ -38,14 +38,14 @@
       note: 'Giá buffet mỗi khách, chưa gồm VAT. Hình ảnh món ăn chỉ mang tính minh hoạ. Bấm vào trang để phóng to.',
       cta: 'Đặt bàn ngay', page: 'Trang', of: 'trên', prev: 'Trang trước', next: 'Trang sau', hint: 'Dùng phím ← → hoặc vuốt để lật trang',
       perGuest: '/ KHÁCH', city: 'ĐÀ NẴNG', menu: 'THỰC ĐƠN BUFFET',
-      promo: 'Ưu đãi: đi 4 tính 3, buffet từ 349K trở lên, cả ngày thứ 2 đến thứ 5, thứ 6, 7, CN từ sáng đến 16:00 (trừ ngày lễ).', pT: 'Ưu đãi nhóm', pBig: 'ĐI 4 TÍNH 3', pS1: 'Áp dụng cho buffet từ 349K trở lên', pS2: 'Nhóm 4 khách chỉ tính tiền 3 khách. Áp dụng cả ngày thứ Hai đến thứ Năm; thứ Sáu, thứ Bảy, Chủ nhật chỉ áp dụng từ sáng đến 16:00. Không áp dụng ngày lễ.', pS3: 'Chi tiết vui lòng gọi 0934 971 972', cT: 'Buffet Coca', cS: 'Dành cho buổi trưa',
+      promo: 'Ưu đãi: đi 4 tính 3, buffet từ 349K trở lên, cả ngày thứ 2 đến thứ 5, thứ 6, 7, CN từ sáng đến 16:00 (trừ ngày lễ).', pT: 'Ưu đãi nhóm', pBig: 'ĐI 4 TÍNH 3', pS1: 'Áp dụng cho buffet từ 349K trở lên', pS2: 'Nhóm 4 khách chỉ tính tiền 3 khách. Áp dụng cả ngày thứ Hai đến thứ Năm; thứ Sáu, thứ Bảy, Chủ nhật chỉ áp dụng từ sáng đến 16:00. Không áp dụng ngày lễ.', pS3: 'Chi tiết vui lòng gọi 0934 971 972', cT: 'Buffet Coca', cS: 'Dành cho buổi trưa', 
     },
     en: {
       eyebrow: 'Menu', title: 'Menu', lead: 'Pick a menu, then turn the pages: from starters to mains and sides.',
       note: 'Buffet price per guest, VAT not included. Photos are for illustration only. Tap a page to zoom in.',
       cta: 'Book a table', page: 'Page', of: 'of', prev: 'Previous page', next: 'Next page', hint: 'Use the ← → keys or swipe to turn pages',
       perGuest: '/ GUEST', city: 'DA NANG', menu: 'BUFFET MENU',
-      promo: 'Offer: dine 4, pay for 3, on buffets from 349K up, all day Mon to Thu, Fri, Sat, Sun until 4 PM (excl. public holidays).', pT: 'Group offer', pBig: 'DINE 4, PAY 3', pS1: 'On buffets from 349K up', pS2: 'A group of 4 pays for 3 guests. Valid all day Monday to Thursday; Friday, Saturday and Sunday from opening until 4:00 PM only. Not available on public holidays.', pS3: 'For details please call 0934 971 972', cT: 'Coca buffet', cS: 'Lunchtime only',
+      promo: 'Offer: dine 4, pay for 3, on buffets from 349K up, all day Mon to Thu, Fri, Sat, Sun until 4 PM (excl. public holidays).', pT: 'Group offer', pBig: 'DINE 4, PAY 3', pS1: 'On buffets from 349K up', pS2: 'A group of 4 pays for 3 guests. Valid all day Monday to Thursday; Friday, Saturday and Sunday from opening until 4:00 PM only. Not available on public holidays.', pS3: 'For details please call 0934 971 972', cT: 'Coca buffet', cS: 'Lunchtime only', 
     },
   };
   const $ = (id) => document.getElementById(id);
@@ -150,7 +150,7 @@
     const L = TXT[lang()];
     $('m-eyebrow').textContent = L.eyebrow; $('m-title').textContent = L.title; $('m-lead').textContent = L.lead; $('note').textContent = L.note; $('m-cta').textContent = L.cta; $('hint').textContent = L.hint;
     const tabs = $('tabs'); tabs.textContent = '';
-    const CAP = { '199K': { vi: 'Buổi trưa', en: 'Lunch' }, carte: { vi: 'Gọi món', en: 'Order' }, drinks: { vi: 'Thức uống', en: 'Beverages' } };
+    const CAP = { '219K': { vi: 'Buổi trưa', en: 'Lunch' }, carte: { vi: 'Gọi món', en: 'Order' }, drinks: { vi: 'Thức uống', en: 'Beverages' } };
     const MAIN = { carte: { vi: 'Menu lẻ', en: 'À la carte' }, drinks: { vi: 'Đồ uống', en: 'Drinks' } };
     Object.keys(BOOKS).forEach((k) => {
       if (k === '269K' || k === 'carte') tabs.append(mk('span', 'tsep'));
