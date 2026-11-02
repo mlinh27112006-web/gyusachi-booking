@@ -54,7 +54,7 @@
   const mq = window.matchMedia('(max-width: 760px)');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let bookKey = (BOOKS[new URLSearchParams(location.search).get('book')] ? new URLSearchParams(location.search).get('book') : '269K'), pages = [], f = 0, cur = 0, leafEls = [], lb = -1, imgs = [];
-  const url = (n) => `/img/menu/${n}`;
+  const url = (n) => `/img/menu/${n.replace(/\.jpg$/, ".webp")}`;
 
   function build() {
     const B = BOOKS[bookKey], narrow = mq.matches;

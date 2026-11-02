@@ -132,7 +132,9 @@
     } catch (e) { if (!silent && my === mapReq) toast(errText(e)); }
   }
 
-  function startPoll() { stopPoll(); pollTimer = setInterval(() => { if (!document.hidden && !state.submitting) loadMap(true); }, 8000); }
+  function startPoll() { stopPoll(); pollTimer = setInterval(() => { if (!document.hidden && !state.submitting) loadMap(true); }, 20000); }
+  // Thời gian thực: có người đặt/giữ/hủy bàn là sơ đồ tự cập nhật ngay.
+  if (window.GSLive) GSLive.on(() => { if (!state.done && !state.submitting && state.time) loadMap(true); });
   function stopPoll() { clearInterval(pollTimer); pollTimer = null; }
 
   function stateOf(tb) {
@@ -269,6 +271,14 @@
     I18N.apply();
     try { state.settings = await api('GET', '/api/settings'); } catch (e) { toast(errText(e)); return; }
     state.date = vnToday(); state.party = Math.min(2, state.settings.maxOnlinePartySize);
+    // Mở từ link của chatbot: điền sẵn ngày, số khách, giờ (?date=2026-10-15&time=19:00&party=4).
+    try {
+      const qp = new URLSearchParams(location.search); const today = vnToday();
+      const d = qp.get('date'); const p = Number(qp.get('party')); const tm = qp.get('time');
+      if (/^\d{4}-\d{2}-\d{2}$/.test(d || '') && d >= today && d <= addDays(today, state.settings.bookingWindowDays)) state.date = d;
+      if (Number.isInteger(p) && p >= 1 && p <= state.settings.maxOnlinePartySize) state.party = p;
+      if (/^\d{2}:\d{2}$/.test(tm || '')) state.time = tm;
+    } catch (e) { /* bỏ qua tham số lỗi */ }
     document.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => I18N.setLang(b.dataset.lang, rerenderAll)));
     $('party-minus').addEventListener('click', () => changeParty(-1));
     $('party-plus').addEventListener('click', () => changeParty(1));

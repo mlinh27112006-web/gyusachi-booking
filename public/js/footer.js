@@ -14,7 +14,7 @@
     f.className = 'foot site-foot';
     f.innerHTML = `
       <div class="sf-grid">
-        <div class="sf-brand"><div class="sf-logo"><img src="/img/logo.png" alt="" width="46" height="40"><span>GYU SACHI</span></div><p>${t.tag}</p></div>
+        <div class="sf-brand"><div class="sf-logo"><img src="/img/logo.webp" alt="" width="46" height="40"><span>GYU SACHI</span></div><p>${t.tag}</p></div>
         <div><h4>${t.ex}</h4><a href="/about.html">${t.about}</a><a href="/menu.html">${t.menu}</a><a href="/book.html">${t.book}</a><a href="/lookup.html">${t.lookup}</a><a href="/recruitment.html">${t.jobs}</a></div>
         <div><h4>${t.ct}</h4><p>44 Trần Văn Trứ, Đà Nẵng</p><a href="tel:0934971972">0934 971 972</a><a href="${MAP}" target="_blank" rel="noopener">${t.map} →</a></div>
         <div><h4>${t.hrs}</h4><p>${t.wk}<br>10:30 – 14:00 · 16:30 – 22:00</p><p>${t.we}<br>10:30 – 22:00</p></div>

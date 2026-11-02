@@ -90,8 +90,9 @@
           <td data-l=""><span class="late">${esc(lateText(r))}</span></td><td><div class="acts">${actionButtons(r)}</div></td></tr>`).join('')}</tbody></table>`;
       }
       bindActions(root, (id) => list.find((r) => r.id === id), load);
-      load(); timer = setInterval(() => { if (!document.hidden) load(); }, 30000);
-      return { destroy() { dead = true; clearInterval(timer); } };
+      load(); timer = setInterval(() => { if (!document.hidden) load(); }, 60000);
+      const off = window.GSLive ? GSLive.on(() => load()) : () => {};
+      return { destroy() { dead = true; off(); clearInterval(timer); } };
     },
   };
 
@@ -152,8 +153,9 @@
       let qt = null; $('#f-q').addEventListener('input', (e) => { clearTimeout(qt); qt = setTimeout(() => { st.q = e.target.value.trim(); load(); }, 300); });
       $('#f-reload').addEventListener('click', load);
       bindActions($('#list'), (id) => list.find((r) => r.id === id), load);
-      load(); timer = setInterval(() => { if (!document.hidden) load(); }, 30000);
-      return { destroy() { dead = true; clearInterval(timer); clearTimeout(qt); } };
+      load(); timer = setInterval(() => { if (!document.hidden) load(); }, 60000);
+      const off = window.GSLive ? GSLive.on(() => load()) : () => {};
+      return { destroy() { dead = true; off(); clearInterval(timer); clearTimeout(qt); } };
     },
   };
 })();

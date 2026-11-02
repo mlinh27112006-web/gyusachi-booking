@@ -23,6 +23,8 @@ module.exports = {
   } : null,
   jwtSecret: required('JWT_SECRET'),
   jwtExpiresIn: '8h',
+  // Địa chỉ công khai của website (bot dùng để gửi link sơ đồ bàn). Demo qua ngrok thì điền địa chỉ ngrok.
+  publicUrl: (process.env.PUBLIC_URL || '').replace(/\/+$/, ''),
   fbVerifyToken: process.env.FB_VERIFY_TOKEN || '',
   fbAppSecret: process.env.FB_APP_SECRET || '',
   fbPageToken: process.env.FB_PAGE_ACCESS_TOKEN || '',
