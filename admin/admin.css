@@ -113,6 +113,8 @@ input, select, textarea { background: #fff; border: 1px solid #c7ccd3; border-ra
 .badge.seated { background: #def3e8; color: var(--ok); border-color: #b4dcc6; }
 .badge.done { background: #eceff3; color: #3f4954; border-color: #d3d8de; }
 .badge.noshow { background: #fde7d6; color: #a2470a; border-color: #f2c7a6; }
+.badge.hot { background: #fde8e8; color: #b42318; border-color: #f4b6b0; animation: hotpulse 1.6s ease-in-out infinite; }
+@keyframes hotpulse { 50% { box-shadow: 0 0 0 4px rgba(180,35,24,.15); } }
 .badge.cancel { background: #f1f1f2; color: #6c737b; border-color: #dcdee1; }
 .late { color: var(--warn) !important; font-weight: 600; }
 .ns { color: #a2470a; }

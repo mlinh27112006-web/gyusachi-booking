@@ -5,6 +5,7 @@
 const rules = require('./bookingRules');
 const reservationService = require('./reservationService');
 const tableService = require('./tableService');
+const waitlistService = require('./waitlistService');
 const db = require('../db');
 const { getSettings, getOpeningHours } = require('../settings');
 const config = require('../config');
@@ -94,6 +95,8 @@ function takeContact(original) {
 }
 
 const CONFIRM = /^(ok|oke|okay|dong y|xac nhan|chot|dung roi|vang|da|yes|y|duoc|ok nhe|ok em|ok ban|chot nhe)\b/;
+const WAIT_YES = /^(cho|co|ok|oke|dong y|vang|da|ghi|ghi ten|xep hang|danh sach cho|cho em|cho minh|duoc)\b/;
+const WAIT_NO = /\b(khong|ko|thoi|huy|bo qua|khoi)\b/;
 const BOOK_INTENT = /\b(dat ban|dat cho|giu ban|giu cho|book|booking|dat truoc|con ban|con cho)\b/;
 const MAP_INTENT = /\b(so do|xem ban|xem cho|hinh ban|vi tri ban|chon ban|ban nao|ban trong|ban con trong)\b/;
 const CHANGE_TABLE = /\b(doi ban|ban khac|doi cho|cho khac|chon lai ban)\b/;
@@ -253,6 +256,27 @@ async function handle(senderId, rawText, opts = {}) {
   const gotSlot = found.date || found.time || found.party;
   const isConfirm = !!s && s.stage === 'confirm' && CONFIRM.test(n) && !gotSlot;
 
+  // Khách vừa được báo có bàn trống từ danh sách chờ: "ok" là giữ bàn, "không" là bỏ chờ.
+  if (!s) {
+    const notice = await waitlistService.activeNoticeFor(senderId);
+    if (notice && !intent && !gotSlot) {
+      if (WAIT_NO.test(n) && !CONFIRM.test(n)) {
+        await waitlistService.markCancelled(notice.id);
+        return { text: `Dạ em đã bỏ anh/chị khỏi danh sách chờ ạ. Khi cần anh/chị cứ nhắn "đặt bàn" để em hỗ trợ nhé. ${SIGN}` };
+      }
+      if (CONFIRM.test(n)) {
+        const s2 = { stage: 'confirm', ts: Date.now(), channel: notice.channel, party: notice.party, date: notice.date, time: notice.time, name: notice.name, phone: notice.phone, skip: [] };
+        const { table } = await findTable(s2, settings, hours);
+        if (!table) return { text: `Dạ rất tiếc, bàn vừa có người giữ mất rồi ạ. Em vẫn để anh/chị trong danh sách chờ, có bàn em nhắn ngay nhé. ${SIGN}` };
+        s2.tableId = table.id; s2.tableCode = table.code; s2.floor = table.floor;
+        sessions.set(senderId, s2);
+        const r = await finish(senderId, s2, settings, hours);
+        if (r.bookingCode) await waitlistService.markBooked(notice.id, r.bookingCode);
+        return r;
+      }
+    }
+  }
+
   // Khách cảm ơn hoặc chào tạm biệt khi không đang đặt bàn dở: đáp lại lịch sự.
   if ((!s || s.stage === 'slots' && !s.party && !s.date && !s.time) && THANKS.test(n) && !intent && !gotSlot) {
     sessions.delete(senderId);
@@ -267,6 +291,35 @@ async function handle(senderId, rawText, opts = {}) {
   s.ts = Date.now();
 
   if (isConfirm) return finish(senderId, s, settings, hours);
+
+  // Danh sách chờ: khách đồng ý chờ giờ đã hết bàn, rồi để lại họ tên và số điện thoại.
+  if (s.waitOffer && s.stage !== 'waitcontact' && !gotSlot && !tableTalk && WAIT_YES.test(n) && n.split(' ').length <= 6) s.stage = 'waitcontact';
+  if (s.stage === 'waitcontact') {
+    const wc = takeContact(original);
+    if (wc.phone) s.phone = wc.phone;
+    if (wc.name) s.name = wc.name;
+    if (!s.name || !s.phone) {
+      const need = !s.name && !s.phone ? 'họ tên và số điện thoại' : !s.name ? 'họ tên' : 'số điện thoại';
+      return { text: `Dạ anh/chị cho em xin ${need} để em ghi vào danh sách chờ ạ.` };
+    }
+    try {
+      const w = s.waitOffer;
+      const start = rules.validateSlot(w.date, w.time, settings, hours);
+      const r = await waitlistService.join({
+        name: rules.validateName(s.name), phone: rules.normalizePhone(s.phone), party: w.party, start,
+        channel: s.channel || 'fanpage', externalUserId: (s.channel || 'fanpage') === 'fanpage' ? senderId : null,
+        note: 'Đăng ký chờ qua chatbot',
+      });
+      sessions.delete(senderId);
+      const how = (s.channel || 'fanpage') === 'fanpage'
+        ? 'Khi có bàn trống, em sẽ nhắn ngay cho anh/chị tại đây ạ.'
+        : `Khi có bàn trống, nhà hàng sẽ gọi cho anh/chị theo số ${phoneFmt(rules.normalizePhone(s.phone))} ạ.`;
+      return { text: `Dạ em đã ghi anh/chị vào danh sách chờ:\n• ${w.party} khách\n• ${fmtDate(w.date)}, ${w.time}\n• ${s.name} – ${phoneFmt(rules.normalizePhone(s.phone))}\n${how} ${SIGN}` };
+    } catch (e) {
+      if (e.status && e.status < 500) { if (/điện thoại/.test(e.message)) s.phone = null; if (/họ tên/.test(e.message)) s.name = null; return { text: politeError(e, settings) }; }
+      throw e;
+    }
+  }
 
   // Khách muốn chọn bàn theo mã, đổi bàn khác hoặc xem sơ đồ bàn.
   if (tableCodeM) s.wantCode = tableCodeM[1];
@@ -326,10 +379,11 @@ async function handle(senderId, rawText, opts = {}) {
     const { table, free, miss, chosen } = await findTable(s, settings, hours);
     if (!table) {
       const alt = await nearestSlots(s.date, s.time, s.party, settings, hours);
-      const t0 = s.time; s.time = null; s.asking = 'time';
-      if (alt.length) return { text: `Dạ rất tiếc, lúc ${t0} ${fmtDate(s.date)} đã hết bàn cho ${s.party} khách. Các giờ còn bàn gần nhất: ${alt.join(', ')}. Anh/chị chọn giờ nào ạ?` };
+      const t0 = s.time; s.waitOffer = { date: s.date, time: t0, party: s.party }; s.time = null; s.asking = 'time';
+      const waitHint = `\nNếu anh/chị muốn đúng giờ ${t0}, em có thể ghi vào danh sách chờ và nhắn ngay khi có bàn trống. Anh/chị nhắn "chờ" để em ghi nhận nhé ạ.`;
+      if (alt.length) return { text: `Dạ rất tiếc, lúc ${t0} ${fmtDate(s.date)} đã hết bàn cho ${s.party} khách. Các giờ còn bàn gần nhất: ${alt.join(', ')}. Anh/chị chọn giờ nào ạ?${waitHint}` };
       s.date = null; s.asking = 'date';
-      return { text: `Dạ rất tiếc, ngày đó đã hết bàn cho ${s.party} khách. Anh/chị chọn giúp em ngày khác nhé, hoặc gọi hotline ${phoneFmt(settings.hotline)} ạ. ${SIGN}` };
+      return { text: `Dạ rất tiếc, ngày đó đã hết bàn cho ${s.party} khách. Anh/chị chọn giúp em ngày khác nhé, hoặc gọi hotline ${phoneFmt(settings.hotline)} ạ.${waitHint}\n${SIGN}` };
     }
     s.tableId = table.id; s.tableCode = table.code; s.floor = table.floor; s.stage = 'contact';
     const label = `bàn ${table.code.toUpperCase()} (tầng ${table.floor})`;
@@ -367,10 +421,8 @@ async function finish(senderId, s, settings, hours) {
       // Bàn vừa bị người khác đặt: tìm lại.
       s.tableCode = null; s.stage = 'slots';
       const { table } = await findTable(s, settings, hours).catch(() => ({ table: null }));
-      if (table) {
-        s.tableId = table.id; s.tableCode = table.code; s.floor = table.floor; s.stage = 'confirm';
-        return { text: `Dạ bàn vừa được khách khác đặt mất rồi ạ. Em đổi sang bàn ${table.code.toUpperCase()} (tầng ${table.floor}) cùng giờ nhé. Anh/chị nhắn "ok" để em chốt ạ.` };
-      }
+      if (table) { s.tableId = table.id; s.tableCode = table.code; s.floor = table.floor; s.stage = 'confirm';
+        return { text: `Dạ bàn vừa được khách khác đặt mất rồi ạ. Em đổi sang bàn ${table.code.toUpperCase()} (tầng ${table.floor}) cùng giờ nhé. Anh/chị nhắn "ok" để em chốt ạ.` }; }
       const alt = await nearestSlots(s.date, s.time, s.party, settings, hours);
       s.time = null; s.asking = 'time';
       return { text: alt.length ? `Dạ giờ đó vừa hết bàn ạ. Các giờ còn bàn: ${alt.join(', ')}. Anh/chị chọn giờ nào ạ?` : `Dạ ngày đó vừa hết bàn, anh/chị gọi hotline ${phoneFmt(settings.hotline)} giúp em nhé ạ. ${SIGN}` };

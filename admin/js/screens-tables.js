@@ -175,9 +175,12 @@
         done.querySelector('#again').addEventListener('click', () => { Admin.prefill = null; Admin.go('create', true); });
       }
 
+      if (pre && pre.name) $('#f-name').value = pre.name;
+      if (pre && pre.phone) $('#f-phone').value = pre.phone;
       loadAll(true);
-      poll = setInterval(() => { if (!document.hidden && !st.busy && !$('#f').hidden) loadMap(); }, 10000);
-      return { destroy() { dead = true; clearInterval(poll); clearTimeout(pt); } };
+      poll = setInterval(() => { if (!document.hidden && !st.busy && !$('#f').hidden) loadMap(); }, 30000);
+      const off = window.GSLive ? GSLive.on(() => { if (!st.busy && !$('#f').hidden) loadMap(); }) : () => {};
+      return { destroy() { dead = true; off(); clearInterval(poll); clearTimeout(pt); } };
     },
   };
 
@@ -264,8 +267,9 @@
       bindDateNav(root, () => st.date, (d) => { st.date = d; st.sel = null; $('#d-input').value = d; load(true); });
       $('#f-time').addEventListener('change', (e) => { st.time = e.target.value; load(false); });
       $('#reload').addEventListener('click', () => load(true));
-      load(true); timer = setInterval(() => { if (!document.hidden) load(false); }, 15000);
-      return { destroy() { dead = true; clearInterval(timer); } };
+      load(true); timer = setInterval(() => { if (!document.hidden) load(false); }, 45000);
+      const off = window.GSLive ? GSLive.on(() => load(false)) : () => {};
+      return { destroy() { dead = true; off(); clearInterval(timer); } };
     },
   };
 })();

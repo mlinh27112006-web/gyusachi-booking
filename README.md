@@ -214,3 +214,26 @@ Từ khóa khớp không phân biệt hoa thường và dấu, theo từ nguyên
 - **Tin nhắn Facebook** (owner, admin, manager, fanpage): danh sách cuộc trò chuyện, xem tin, nhân viên nhắn trả lời, nút "Thử tin nhắn mô phỏng", nút "Đặt bàn cho khách này" (mở màn tạo đặt bàn với mã người nhắn đã điền sẵn); thẻ "Kịch bản trả lời tự động" để thêm, sửa, bật/tắt, xóa từ khóa. Gửi lên Facebook thật khi đã điền `FB_PAGE_ACCESS_TOKEN`, nếu không thì chỉ lưu lại; đầu màn hình có dải thông báo cho biết đã nối chưa.
 - **Nhật ký** (owner, admin): lọc theo ngày, loại thao tác (đặt bàn, nhân viên, Facebook), nhân viên, mã đối tượng; 50 dòng mỗi trang; chỉ xem, không sửa hoặc xóa được.
 - Đủ 8 màn hình quản trị.
+
+## Hiệu năng, SEO và PWA
+- Ảnh dùng WebP (nhẹ hơn ~40%); `b1.jpg` giữ lại cho ảnh chia sẻ Facebook (Open Graph).
+- Mỗi trang có meta description, Open Graph, canonical; trang chủ có Schema.org Restaurant (JSON-LD).
+- `/robots.txt` và `/sitemap.xml` do server tạo, dùng biến `PUBLIC_URL`.
+- PWA: `manifest.webmanifest`, `sw.js`, `offline.html`; có thể "Thêm vào màn hình chính". Service worker không lưu `/api`.
+- Server: cache ảnh 30 ngày, CSS/JS 1 giờ, HTML luôn kiểm tra lại; nén gzip bằng gói `compression` (chạy `npm install`).
+- Nếu đổi địa chỉ Render, sửa chuỗi `gyusachi-booking.onrender.com` trong các file HTML (canonical, og:url, og:image, JSON-LD).
+
+## Sơ đồ bàn thời gian thực
+- `GET /api/stream` (Server-Sent Events, `src/services/liveBus.js`): mỗi thao tác ghi thành công (khách đặt/giữ/hủy bàn, nhân viên đổi trạng thái, bot, Facebook) phát tín hiệu "changed" tới mọi trình duyệt đang mở. Tín hiệu không chứa dữ liệu khách; trình duyệt tự gọi lại API để lấy sơ đồ mới.
+- `public/js/live.js` dùng chung cho trang đặt bàn và trang quản trị (sơ đồ bàn, danh sách đặt bàn, tạo đặt bàn hộ); góc trái dưới có nhãn "Cập nhật trực tiếp".
+- Vẫn giữ chu kỳ làm mới chậm (20–60 giây) làm dự phòng, ví dụ khi giữ bàn tạm hết hạn hoặc mất kết nối.
+- Demo: mở 2 cửa sổ (khách và quản trị), đặt bàn ở một bên và xem bên kia đổi màu bàn ngay.
+
+## Danh sách chờ + bot tự báo
+- Khung giờ đã hết bàn: bot (website và fanpage) mời khách nhắn "chờ", xin họ tên + số điện thoại rồi ghi vào bảng `waitlist`. Nhân viên cũng ghi hộ ở màn quản trị "Danh sách chờ" (hotline, fanpage).
+- `src/services/waitlistService.js` kiểm tra sau mỗi thay đổi đặt bàn (khách hủy, không đến, về sớm...) và mỗi 60 giây. Theo thứ tự đăng ký, còn bàn thì chuyển lượt chờ sang "Có bàn trống" và:
+  - khách từ fanpage: bot nhắn Messenger ("ok" trong 10 phút để giữ bàn, "không" để bỏ chờ; cần còn trong 24 giờ nhắn của Messenger);
+  - khách web/hotline hoặc nhắn Messenger không được: dòng đổi màu, nhân viên gọi rồi bấm "Đã gọi" hoặc "Tạo đặt bàn".
+- Số bàn trống phải nhiều hơn số khách đã được báo cùng giờ, nên một bàn không bị báo cho nhiều người. Quá 10 phút không trả lời hoặc quá giờ hẹn thì lượt chờ tự hết hạn; khách đã có đặt bàn cùng số điện thoại và giờ thì tự chuyển "Đã đặt bàn".
+- Nâng cấp CSDL đã có (chạy một lần): `npm run db:run -- db/migrations/004_waitlist.sql`. CSDL mới dùng `db/schema.sql`.
+- Quyền dùng chung: xem = `reservation.view`, ghi tên = `reservation.create`, đã gọi/hủy = `reservation.update_status`.

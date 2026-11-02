@@ -76,7 +76,7 @@
   }
 
   // ---------- Menu và chuyển màn hình ----------
-  const ORDER = ['overview', 'reservations', 'create', 'tables', 'facebook', 'reports', 'staff', 'audit'];
+  const ORDER = ['overview', 'reservations', 'create', 'waitlist', 'tables', 'facebook', 'reports', 'staff', 'audit'];
 
   function visibleScreens() { return ORDER.filter((id) => Admin.screens[id] && Admin.can(Admin.screens[id].permission)); }
 
