@@ -5,6 +5,33 @@ const tableService = require('../services/tableService');
 const reservationService = require('../services/reservationService');
 const staffRes = require('../services/staffReservationService');
 
+// Chống dò mã đặt bàn: sai quá MAX_FAILS lần trong cửa sổ thì khóa tạm. Đếm theo cả địa chỉ IP lẫn số điện thoại,
+// lưu trong bộ nhớ (khởi động lại máy chủ là xóa sạch).
+const MAX_FAILS = 5;
+const LOCK_MS = 10 * 60 * 1000;
+const attempts = new Map(); // khóa -> { fails, first, lockedUntil }
+const ipOf = (req) => String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || (req.socket && req.socket.remoteAddress) || 'unknown';
+function lookupKeys(req, phone) { return [`ip:${ipOf(req)}`, ...(phone ? [`phone:${phone}`] : [])]; }
+function assertNotLocked(keys, now = Date.now()) {
+  let wait = 0;
+  for (const k of keys) { const e = attempts.get(k); if (e && e.lockedUntil > now) wait = Math.max(wait, e.lockedUntil - now); }
+  if (wait > 0) {
+    throw new AppError(429, `Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau ${Math.ceil(wait / 60000)} phút hoặc gọi hotline để được hỗ trợ`, 'TOO_MANY_ATTEMPTS');
+  }
+}
+function recordFail(keys, now = Date.now()) {
+  if (attempts.size > 5000) attempts.clear();
+  for (const k of keys) {
+    let e = attempts.get(k);
+    if (!e || now - e.first > LOCK_MS) e = { fails: 0, first: now, lockedUntil: 0 };
+    e.fails += 1;
+    if (e.fails >= MAX_FAILS) e.lockedUntil = now + LOCK_MS;
+    attempts.set(k, e);
+  }
+}
+// Chỉ tính là "nhập sai" khi không tìm thấy lượt đặt hoặc mã sai định dạng.
+const isGuessFail = (err) => err && (err.code === 'NOT_FOUND' || err.code === 'INVALID_CODE');
+
 const body = (req) => (req.body && typeof req.body === 'object' ? req.body : {});
 
 // Chuẩn hóa ngày, giờ, số khách dùng chung cho nhiều API.
@@ -90,7 +117,10 @@ async function createPublic(req, res, next) {
 async function lookup(req, res, next) {
   try {
     const b = body(req);
-    res.json(await reservationService.lookup(rules.normalizePhone(b.phone), normalizeCode(b.code)));
+    const keys = lookupKeys(req, safePhone(b.phone));
+    assertNotLocked(keys);
+    try { res.json(await reservationService.lookup(rules.normalizePhone(b.phone), normalizeCode(b.code))); }
+    catch (err) { if (isGuessFail(err)) recordFail(keys); throw err; }
   } catch (err) { next(err); }
 }
 
@@ -98,9 +128,14 @@ async function lookup(req, res, next) {
 async function cancel(req, res, next) {
   try {
     const b = body(req);
-    res.json(await reservationService.cancelByCustomer(rules.normalizePhone(b.phone), normalizeCode(b.code)));
+    const keys = lookupKeys(req, safePhone(b.phone));
+    assertNotLocked(keys);
+    try { res.json(await reservationService.cancelByCustomer(rules.normalizePhone(b.phone), normalizeCode(b.code))); }
+    catch (err) { if (isGuessFail(err)) recordFail(keys); throw err; }
   } catch (err) { next(err); }
 }
+
+function safePhone(raw) { try { return rules.normalizePhone(raw); } catch (e) { return null; } }
 
 function normalizeCode(raw) {
   const code = String(raw || '').trim().toUpperCase();

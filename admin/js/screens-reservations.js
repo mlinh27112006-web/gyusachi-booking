@@ -26,10 +26,11 @@
     return { completed: { t: 'Đã về', c: 'done' }, no_show: { t: 'Không đến', c: 'noshow' }, cancelled: { t: 'Đã hủy', c: 'cancel' } }[r.status];
   }
 
+  const LATE_HOLD_MIN = 30; // quá số phút này nhà hàng có thể nhả bàn cho khách khác
   function lateText(r) {
     if (r.status !== 'confirmed' || r.arrivedAt) return '';
     const min = Math.floor((Date.now() - toMs(r.start)) / 60000);
-    return min > 0 ? `Trễ ${min >= 60 ? `${Math.floor(min / 60)} giờ ${min % 60} phút` : `${min} phút`}` : '';
+    return min > 0 ? `Trễ ${min >= 60 ? `${Math.floor(min / 60)} giờ ${min % 60} phút` : `${min} phút`}${min > LATE_HOLD_MIN ? ` (quá ${LATE_HOLD_MIN} phút giữ bàn, có thể nhả bàn)` : ''}` : '';
   }
 
   function actionButtons(r) {

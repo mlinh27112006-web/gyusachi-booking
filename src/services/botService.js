@@ -186,6 +186,8 @@ function slotRanges(slots, step) {
 const phoneFmt = (p) => String(p).replace(/^(\d{4})(\d{3})(\d{3})$/, '$1 $2 $3');
 
 const SIGN = 'Gyu Sachi Yakiniku xin cảm ơn.';
+const LATE_HOLD_MIN = 30; // đến trễ quá số phút này thì nhà hàng có thể nhả bàn
+const hoursText = (min) => (min % 60 === 0 ? `${min / 60} tiếng` : `${min} phút`);
 const THANKS = /\b(cam on|cam on nhieu|cam on nha|cam on ban|thanks|thank you|thank|tks|thank u|bye|tam biet)\b/;
 
 // Chuyển lỗi kiểm tra của hệ thống thành câu trả lời lịch sự, rõ ràng cho khách.
@@ -415,7 +417,7 @@ async function finish(senderId, s, settings, hours) {
       rawRequest: { bot: true, party: s.party, date: s.date, time: s.time, tableId: s.tableId },
     });
     sessions.delete(senderId);
-    return { text: `Dạ em đã giữ bàn thành công ạ!\nMã đặt bàn: ${r.bookingCode}\n${summary(s)}\nBàn được giữ ${settings.hold_minutes} phút kể từ giờ hẹn. Anh/chị tra cứu hoặc hủy trên website bằng số điện thoại và mã đặt bàn. Hẹn gặp anh/chị tại nhà hàng ạ!\nGyu Sachi Yakiniku xin chân thành cảm ơn anh/chị đã đặt bàn.`, bookingCode: r.bookingCode };
+    return { text: `Dạ em đã giữ bàn thành công ạ!\nMã đặt bàn: ${r.bookingCode}\n${summary(s)}\nAnh/chị có ${hoursText(settings.hold_minutes)} dùng bàn kể từ giờ hẹn; nếu đến trễ, nhà hàng giữ bàn tối đa ${LATE_HOLD_MIN} phút, quá thời gian này lượt đặt có thể bị hủy để nhường bàn cho khách khác. Anh/chị tra cứu hoặc hủy trên website bằng số điện thoại và mã đặt bàn. Hẹn gặp anh/chị tại nhà hàng ạ!\nGyu Sachi Yakiniku xin chân thành cảm ơn anh/chị đã đặt bàn.`, bookingCode: r.bookingCode };
   } catch (e) {
     if (e.status === 409 || e.code === '23P01') {
       // Bàn vừa bị người khác đặt: tìm lại.
