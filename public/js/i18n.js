@@ -6,6 +6,7 @@
       navAbout: 'Về chúng tôi', navJobs: 'Tuyển dụng', navBook: 'Đặt bàn', navLookup: 'Tra cứu', navHome: 'Trang chủ', navMenu: 'Thực đơn',
       bookTitle: 'Đặt bàn',
       bookLead: '44 Trần Văn Trứ, Đà Nẵng. Bàn được xác nhận ngay khi bạn đặt xong.',
+      partyMinus: 'Giảm số khách', partyPlus: 'Tăng số khách',
       step1: 'Ngày, số khách và giờ',
       step2: 'Chọn bàn',
       step3: 'Thông tin của bạn',
@@ -63,6 +64,7 @@
       navAbout: 'About us', navJobs: 'Careers', navBook: 'Book a table', navLookup: 'Find booking', navHome: 'Home', navMenu: 'Menu',
       bookTitle: 'Book a table',
       bookLead: '44 Tran Van Tru, Da Nang. Your table is confirmed as soon as you finish booking.',
+      partyMinus: 'Fewer guests', partyPlus: 'More guests',
       step1: 'Date, guests and time',
       step2: 'Choose a table',
       step3: 'Your details',
@@ -133,6 +135,8 @@
     RETRY: 'The system is busy. Please try again.',
     NOT_FOUND: 'Booking not found. Check the phone number and booking code.',
     NOT_CANCELLABLE: 'This booking can no longer be cancelled online.',
+    RATE_LIMITED: 'Too many requests in a short time. Please wait a few minutes or call the hotline.',
+    PHONE_LIMIT: 'This phone number already holds the maximum number of upcoming bookings. Please cancel one or call the hotline.',
     TOO_MANY_ATTEMPTS: 'Too many wrong attempts. Please try again in 10 minutes or call the hotline.',
     INVALID_CODE: 'The booking code looks like GYU-1510-0909 (the last 4 digits are the last 4 digits of your phone number).',
   };
@@ -156,6 +160,7 @@
   function apply(root) {
     (root || document).querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
     (root || document).querySelectorAll('[data-i18n-ph]').forEach((el) => { el.placeholder = t(el.dataset.i18nPh); });
+    (root || document).querySelectorAll('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
     document.documentElement.lang = lang;
     document.querySelectorAll('[data-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
   }

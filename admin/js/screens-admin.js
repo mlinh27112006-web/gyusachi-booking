@@ -22,6 +22,8 @@
           <label class="inl">Từ <input type="date" id="r-from" value="${st.from}"></label>
           <label class="inl">đến <input type="date" id="r-to" value="${st.to}"></label>
           <button type="button" class="btn sm primary" id="r-go">Xem báo cáo</button>
+          <button type="button" class="btn sm" id="r-csv" data-kind="reservations">Tải CSV chi tiết</button>
+          <button type="button" class="btn sm" id="r-csv2" data-kind="days">Tải CSV theo ngày</button>
         </div>
         <p class="err" id="r-err" role="alert"></p>
         <div id="r-body"></div>`;
@@ -65,6 +67,23 @@
         st.to = R.today(); st.from = R.addDays(st.to, -(Number(b.dataset.r) - 1)); $('#r-from').value = st.from; $('#r-to').value = st.to; load();
       }));
       $('#r-go').addEventListener('click', () => { st.from = $('#r-from').value; st.to = $('#r-to').value; if (!st.from || !st.to) { $('#r-err').textContent = 'Vui lòng chọn đủ ngày bắt đầu và kết thúc.'; return; } load(); });
+      // Tải CSV: cần gửi kèm token nên không dùng liên kết thường; lấy về dạng blob rồi bấm tải.
+      async function download(btn) {
+        $('#r-err').textContent = ''; btn.disabled = true;
+        try {
+          let token = null; try { token = localStorage.getItem('gyu_admin_token'); } catch (e) { /* bỏ qua */ }
+          const res = await fetch(`/api/staff/reports/export?kind=${btn.dataset.kind}&from=${st.from}&to=${st.to}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+          if (!res.ok) { let m = ''; try { m = (await res.json()).error; } catch (e) { /* bỏ qua */ } throw new Error(m || `Không tải được (lỗi ${res.status}).`); }
+          const name = (/filename="?([^";]+)"?/.exec(res.headers.get('Content-Disposition') || '') || [])[1] || 'bao-cao.csv';
+          const url = URL.createObjectURL(await res.blob()); const a = document.createElement('a');
+          a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
+        } catch (e) { $('#r-err').textContent = e.message; } finally { btn.disabled = false; }
+      }
+      root.querySelectorAll('#r-csv,#r-csv2').forEach((b) => b.addEventListener('click', () => {
+        const f = $('#r-from').value; const t = $('#r-to').value;
+        if (!f || !t) { $('#r-err').textContent = 'Vui lòng chọn đủ ngày bắt đầu và kết thúc.'; return; }
+        st.from = f; st.to = t; download(b);
+      }));
       load();
       return { destroy() { dead = true; } };
     },

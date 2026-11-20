@@ -5,6 +5,19 @@ const { AppError } = require('../errors');
 const TZ_OFFSET_MIN = 7 * 60;
 const pad = (n) => String(n).padStart(2, '0');
 
+// Lịch đóng cửa/bảo trì do maintenanceService nạp định kỳ: [{ df, dt, tf, tt, reason }] (tf/tt rỗng = cả ngày).
+let closures = [];
+function setClosures(list) { closures = Array.isArray(list) ? list : []; }
+function closuresOn(date) { return closures.filter((c) => c.df <= date && date <= c.dt); }
+// Giờ m (phút) có bị đóng không: cả ngày, hoặc thời gian giữ bàn [m, m+hold) giao với khung giờ đóng.
+function isClosedAt(date, m, hold) {
+  for (const c of closuresOn(date)) {
+    if (!c.tf) return true;
+    if (m < parseTime(c.tt) && m + hold > parseTime(c.tf)) return true;
+  }
+  return false;
+}
+
 // Ngày giờ hiện tại theo giờ Việt Nam: { date: 'YYYY-MM-DD', minutes: số phút từ 00:00 }.
 function vnNow(nowMs = Date.now()) {
   const d = new Date(nowMs + TZ_OFFSET_MIN * 60000);
@@ -50,6 +63,7 @@ function slotsForDate(date, openingHours, settings, nowMs = Date.now()) {
     const close = parseTime(shift.close_time);
     for (let m = open; m <= close - before; m += step) {
       if (date === now.date && m <= now.minutes) continue;
+      if (isClosedAt(date, m, settings.hold_minutes || 120)) continue;
       slots.push(formatTime(m));
     }
   }
@@ -70,6 +84,8 @@ function validateDate(date, settings, nowMs = Date.now()) {
 // Kiểm tra ngày và giờ khách chọn, trả về thời điểm bắt đầu dạng timestamptz '2026-10-07 18:00:00+07'.
 function validateSlot(date, time, settings, openingHours, nowMs = Date.now()) {
   validateDate(date, settings, nowMs);
+  const closedDay = closuresOn(date).find((c) => !c.tf);
+  if (closedDay) throw new AppError(400, `Nhà hàng tạm nghỉ ngày này${closedDay.reason ? ` (${closedDay.reason})` : ''}. Vui lòng chọn ngày khác`, 'CLOSED');
   if (!slotsForDate(date, openingHours, settings, nowMs).includes(String(time))) {
     throw new AppError(400, 'Nhà hàng không nhận khách vào giờ này. Vui lòng chọn giờ khác', 'INVALID_TIME');
   }
@@ -127,5 +143,5 @@ const isUuid = (s) => typeof s === 'string' && UUID_RE.test(s);
 module.exports = {
   vnNow, isValidDate, parseTime, formatTime, isoDayOfWeek, addDays,
   slotsForDate, validateDate, validateSlot, validateParty, normalizePhone, validateName, validateNote,
-  validateId, isUuid,
+  validateId, isUuid, setClosures, closuresOn,
 };

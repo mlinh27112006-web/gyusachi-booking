@@ -7,6 +7,11 @@ const { notFound, errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
 
+// Chạy sau proxy của Render: để req.protocol, req.secure đúng (sitemap dùng https, HSTS chỉ gửi khi đã là https).
+app.set('trust proxy', 1);
+app.disable('x-powered-by');
+app.use(require('./middleware/securityHeaders').securityHeaders);
+
 // Giữ lại nội dung gốc (rawBody) để sau này kiểm tra chữ ký HMAC của Facebook.
 app.use(express.json({
   verify: (req, res, buf) => { req.rawBody = buf; },
@@ -52,6 +57,8 @@ app.use('/api', (req, res, next) => {
   if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
     res.on('finish', () => {
       if (res.statusCode >= 400) return;
+      // Đăng nhập và tra cứu mã không làm đổi bàn: không phát tín hiệu cho mọi trình duyệt đang mở (tránh bị lạm dụng).
+      if (/^\/api\/(auth\/|reservations\/lookup)/.test(req.originalUrl)) return;
       live.changed();
       scheduleWaitlistCheck(); // có thể vừa trống bàn: báo người đang chờ
     });
@@ -104,6 +111,12 @@ app.use('/api/bot', require('./routes/bot'));
 app.use('/api', require('./routes/booking'));
 
 app.use('/api', notFound);
+// Địa chỉ không có thật trên website: trang 404 thân thiện thay cho dòng "Cannot GET".
+app.use((req, res) => {
+  res.status(404).type('html').send('<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Không tìm thấy trang | Gyu Sachi Yakiniku</title></head>'
+    + '<body style="font-family:system-ui,sans-serif;background:#120606;color:#f3e6c8;display:grid;place-items:center;min-height:100vh;margin:0;text-align:center;padding:24px"><div><h1 style="font-size:28px">Không tìm thấy trang</h1>'
+    + '<p>Trang bạn tìm không tồn tại hoặc đã được chuyển.</p><p><a style="color:#e6cf94" href="/">Về trang chủ</a> · <a style="color:#e6cf94" href="/book.html">Đặt bàn</a></p></div></body></html>');
+});
 app.use(errorHandler);
 
 // Định kỳ 60 giây: giữ chỗ hết hạn, khóa mềm hết hạn, đến giờ hẹn... đều có thể làm trống bàn.
@@ -118,6 +131,15 @@ async function ensureSchema() {
 }
 ensureSchema();
 
-app.listen(config.port, () => {
+const server = app.listen(config.port, () => {
   console.log(`Server đang chạy tại http://localhost:${config.port}`);
 });
+
+// Render gửi SIGTERM mỗi lần deploy: ngừng nhận kết nối mới rồi thoát gọn (kết nối SSE còn mở thì chờ tối đa 8 giây).
+process.on('SIGTERM', () => {
+  console.log('Nhận SIGTERM, đang tắt máy chủ...');
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(0), 8000).unref();
+});
+// Một lỗi lọt lưới không được làm sập cả máy chủ đang phục vụ khách.
+process.on('unhandledRejection', (e) => console.error('Lỗi chưa được xử lý:', e && e.message ? e.message : e));

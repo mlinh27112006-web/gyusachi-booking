@@ -65,6 +65,18 @@ async function countAvailable({ start, holdMinutes, party }) {
   return r.rows[0].n;
 }
 
+// Số bàn khách được chọn ở NHIỀU khung giờ, trong một truy vấn (thay cho mỗi giờ một truy vấn). Trả về mảng cùng thứ tự với starts.
+async function countAvailableMany({ starts, holdMinutes, party }) {
+  if (starts.length === 0) return [];
+  const r = await db.query(
+    `SELECT s.i, (SELECT count(*)::int FROM available_tables(s.start, s.start + make_interval(mins => $2::int), $3::smallint, NULL::uuid)) AS n
+       FROM unnest($1::timestamptz[]) WITH ORDINALITY AS s(start, i) ORDER BY s.i`,
+    [starts, holdMinutes, party]
+  );
+  if (r.rows.length !== starts.length) throw new Error('countAvailableMany: số dòng không khớp');
+  return r.rows.map((x) => x.n);
+}
+
 // Giữ bàn tạm cho khách đang điền form. Mỗi trình duyệt (token) chỉ giữ một bàn,
 // đổi bàn thì khóa cũ được nhả. Trả về token và giờ hết hạn.
 async function acquireLock({ tableId, start, holdMinutes, party, token = null, ttlSeconds }) {
@@ -95,4 +107,4 @@ async function releaseLock(token) {
   await db.query('DELETE FROM table_locks WHERE lock_token = $1::uuid', [token]);
 }
 
-module.exports = { getTableMap, countAvailable, acquireLock, releaseLock };
+module.exports = { getTableMap, countAvailable, countAvailableMany, acquireLock, releaseLock };

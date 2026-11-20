@@ -9,6 +9,14 @@ function required(name) {
   return value;
 }
 
+// Khóa ký token quá ngắn thì dễ bị đoán: cảnh báo khi chạy thật (không chặn, để máy chủ vẫn khởi động được).
+function checkSecret(s) {
+  if (process.env.NODE_ENV === 'production' && s.length < 32) {
+    console.warn('CẢNH BÁO: JWT_SECRET nên dài ít nhất 32 ký tự ngẫu nhiên.');
+  }
+  return s;
+}
+
 module.exports = {
   port: Number(process.env.PORT) || 3000,
   // Cách 1: một chuỗi DATABASE_URL. Cách 2 (dễ hơn nếu mật khẩu có ký tự đặc biệt như @ # / %):
@@ -21,7 +29,7 @@ module.exports = {
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME,
   } : null,
-  jwtSecret: required('JWT_SECRET'),
+  jwtSecret: checkSecret(required('JWT_SECRET')),
   jwtExpiresIn: '8h',
   // Địa chỉ công khai của website (bot dùng để gửi link sơ đồ bàn). Demo qua ngrok thì điền địa chỉ ngrok.
   publicUrl: (process.env.PUBLIC_URL || '').replace(/\/+$/, ''),

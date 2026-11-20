@@ -76,7 +76,7 @@
               <label>Số khách <input type="number" id="f-party" min="1" max="20" value="${st.party}" inputmode="numeric"></label>
               ${needChannel ? `<label>Kênh <select id="f-ch"><option value="hotline">Hotline</option><option value="fanpage">Fanpage</option></select></label>` : ''}
             </div>
-            <p class="hint">Mỗi lượt giữ một bàn trong 120 phút nên số khách tối đa bằng bàn lớn nhất (8 chỗ).</p>
+            <p class="hint">Mỗi lượt giữ một bàn trong 2 giờ 15 phút nên số khách tối đa bằng bàn lớn nhất (8 chỗ).</p>
           </section>
           <section class="panel"><div class="panel-head"><h2>2. Chọn bàn</h2><span id="pick-sum" class="muted"></span></div>
             <div class="floor-tabs" id="tabs"></div>
@@ -247,7 +247,7 @@
         if (!tb) { box.innerHTML = '<p class="muted">Bấm vào một bàn để xem chi tiết.</p>'; return; }
         const head = `<h2>Bàn ${esc(tb.code.toUpperCase())}</h2><p class="muted">Tầng ${tb.floor} · ${tb.capacity} chỗ${tb.isVip ? ' · phòng VIP' : ''}</p>`;
         if (tb.selectable) {
-          box.innerHTML = `${head}<p>Còn trống lúc ${esc(st.time)} (giữ 120 phút).</p>${Admin.can('reservation.create') ? '<button type="button" class="btn primary" id="book-here">Đặt bàn này</button>' : ''}`;
+          box.innerHTML = `${head}<p>Còn trống lúc ${esc(st.time)} (giữ 2 giờ 15 phút).</p>${Admin.can('reservation.create') ? '<button type="button" class="btn primary" id="book-here">Đặt bàn này</button>' : ''}`;
           const b = box.querySelector('#book-here');
           if (b) b.addEventListener('click', () => { Admin.prefill = { date: st.date, time: st.time, party: Math.min(tb.capacity, 20), tableId: tb.id }; Admin.go('create'); });
           return;

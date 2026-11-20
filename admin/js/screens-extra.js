@@ -127,7 +127,7 @@
         st.tab = b.dataset.tab; root.querySelectorAll('[data-tab]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
         $('#tab-chat').hidden = st.tab !== 'chat'; $('#tab-rules').hidden = st.tab !== 'rules'; if (st.tab === 'rules') loadRules();
       }));
-      loadConvs(); timer = setInterval(() => { if (!document.hidden && st.tab === 'chat') { loadConvs(); if (st.sel && !$('#rp-text').value) loadMsgs(); } }, 10000);
+      loadConvs(); timer = setInterval(() => { if (!document.hidden && st.tab === 'chat') { loadConvs(); if (st.sel && $('#rp-text') && !$('#rp-text').value) loadMsgs(); } }, 10000);
       return { destroy() { dead = true; clearInterval(timer); } };
     },
   };
@@ -138,8 +138,10 @@
     'reservation.cancel': 'Hủy đặt bàn', 'reservation.status': 'Đổi trạng thái', 'staff.create': 'Tạo nhân viên', 'staff.update': 'Sửa nhân viên',
     'staff.reset_password': 'Đặt lại mật khẩu', 'staff.change_password': 'Đổi mật khẩu', 'facebook.reply': 'Trả lời Facebook',
     'facebook.rule_create': 'Thêm kịch bản', 'facebook.rule_update': 'Sửa kịch bản', 'facebook.rule_delete': 'Xóa kịch bản',
+    'waitlist.contacted': 'Đã gọi khách chờ', 'waitlist.cancel': 'Bỏ khách khỏi danh sách chờ',
+    'table.update': 'Tạm ngưng hoặc mở lại bàn', 'closure.create': 'Thêm lịch đóng cửa', 'closure.delete': 'Xóa lịch đóng cửa',
   };
-  const GROUPS = [['', 'Mọi thao tác'], ['reservation', 'Đặt bàn'], ['staff', 'Nhân viên'], ['facebook', 'Facebook']];
+  const GROUPS = [['', 'Mọi thao tác'], ['reservation', 'Đặt bàn'], ['staff', 'Nhân viên'], ['waitlist', 'Danh sách chờ'], ['table', 'Bàn'], ['closure', 'Đóng cửa'], ['facebook', 'Facebook']];
   const PAGE = 50;
 
   function detailText(d) {

@@ -49,13 +49,15 @@ async function availability(req, res, next) {
     const date = rules.validateDate(req.query.date, settings);
     const party = rules.validateParty(req.query.party, settings);
     const times = rules.slotsForDate(date, hours, settings);
-    const slots = [];
-    for (const time of times) {
-      const count = await tableService.countAvailable({
-        start: `${date} ${time}:00+07`, holdMinutes: settings.hold_minutes, party,
-      });
-      slots.push({ time, available: count });
+    // Một truy vấn cho cả ngày; nếu lỗi thì quay về cách cũ (mỗi giờ một truy vấn) để khách vẫn đặt được.
+    const starts = times.map((time) => `${date} ${time}:00+07`);
+    let counts;
+    try { counts = await tableService.countAvailableMany({ starts, holdMinutes: settings.hold_minutes, party }); }
+    catch (e) {
+      counts = [];
+      for (const start of starts) counts.push(await tableService.countAvailable({ start, holdMinutes: settings.hold_minutes, party }));
     }
+    const slots = times.map((time, i) => ({ time, available: counts[i] }));
     res.json({ date, party, slots });
   } catch (err) { next(err); }
 }
