@@ -38,14 +38,14 @@
       note: 'Giá buffet mỗi khách, chưa gồm VAT. Hình ảnh món ăn chỉ mang tính minh hoạ. Bấm vào trang để phóng to.',
       cta: 'Đặt bàn ngay', page: 'Trang', of: 'trên', prev: 'Trang trước', next: 'Trang sau', hint: 'Dùng phím ← → hoặc vuốt để lật trang',
       perGuest: '/ KHÁCH', city: 'ĐÀ NẴNG', menu: 'THỰC ĐƠN BUFFET',
-      promo: 'Ưu đãi: đi 4 tính 3, buffet từ 349K trở lên, cả ngày thứ 2 đến thứ 5, thứ 6, 7, CN từ sáng đến 16:00 (trừ ngày lễ).', pT: 'Ưu đãi nhóm', pBig: 'ĐI 4 TÍNH 3', pS1: 'Áp dụng cho buffet từ 349K trở lên', pS2: 'Nhóm 4 khách chỉ tính tiền 3 khách. Áp dụng cả ngày thứ Hai đến thứ Năm; thứ Sáu, thứ Bảy, Chủ nhật chỉ áp dụng từ sáng đến 16:00. Không áp dụng ngày lễ.', pS3: 'Chi tiết vui lòng gọi 0934 971 972', cT: 'Buffet Coca', cT2: 'trưa', cS: 'Chỉ ca trưa', cEb: 'Đồ uống', cTag: 'Mát lạnh cùng bữa nướng', cHr: 'Ca trưa', cHot: 'Hotline', 
+      promo: 'Ưu đãi: đi 4 tính 3, buffet từ 349K trở lên, cả ngày thứ 2 đến thứ 5, thứ 6, 7, CN từ sáng đến 16:00 (trừ ngày lễ).', pT: 'Ưu đãi nhóm', pBig: 'ĐI 4 TÍNH 3', pS1: 'Áp dụng cho buffet từ 349K trở lên', pS2: 'Nhóm 4 khách chỉ tính tiền 3 khách. Áp dụng cả ngày thứ Hai đến thứ Năm; thứ Sáu, thứ Bảy, Chủ nhật chỉ áp dụng từ sáng đến 16:00. Không áp dụng ngày lễ.', pS3: 'Chi tiết vui lòng gọi 0934 971 972', cL: 'vi', cT: 'Buffet Coca', cT2: 'trưa', cS: 'Chỉ ca trưa', cEb: 'Đồ uống', cTag: 'Mát lạnh cùng bữa nướng', cHr: 'Ca trưa', cHot: 'Hotline', 
     },
     en: {
       eyebrow: 'Menu', title: 'Menu', lead: 'Pick a menu, then turn the pages: from starters to mains and sides.',
       note: 'Buffet price per guest, VAT not included. Photos are for illustration only. Tap a page to zoom in.',
       cta: 'Book a table', page: 'Page', of: 'of', prev: 'Previous page', next: 'Next page', hint: 'Use the ← → keys or swipe to turn pages',
       perGuest: '/ GUEST', city: 'DA NANG', menu: 'BUFFET MENU',
-      promo: 'Offer: dine 4, pay for 3, on buffets from 349K up, all day Mon to Thu, Fri, Sat, Sun until 4 PM (excl. public holidays).', pT: 'Group offer', pBig: 'DINE 4, PAY 3', pS1: 'On buffets from 349K up', pS2: 'A group of 4 pays for 3 guests. Valid all day Monday to Thursday; Friday, Saturday and Sunday from opening until 4:00 PM only. Not available on public holidays.', pS3: 'For details please call 0934 971 972', cT: 'Coca buffet', cT2: 'at lunch', cS: 'Lunchtime only', cEb: 'Drinks', cTag: 'Ice-cold with your grill', cHr: 'Lunch', cHot: 'Hotline', 
+      promo: 'Offer: dine 4, pay for 3, on buffets from 349K up, all day Mon to Thu, Fri, Sat, Sun until 4 PM (excl. public holidays).', pT: 'Group offer', pBig: 'DINE 4, PAY 3', pS1: 'On buffets from 349K up', pS2: 'A group of 4 pays for 3 guests. Valid all day Monday to Thursday; Friday, Saturday and Sunday from opening until 4:00 PM only. Not available on public holidays.', pS3: 'For details please call 0934 971 972', cL: 'en', cT: 'Coca buffet', cT2: 'at lunch', cS: 'Lunchtime only', cEb: 'Drinks', cTag: 'Ice-cold with your grill', cHr: 'Lunch', cHot: 'Hotline', 
     },
   };
   const $ = (id) => document.getElementById(id);
@@ -72,26 +72,17 @@
     pages.push({ t: 'img', src: 'back.jpg', edge: true });
     imgs = []; pages.forEach((x) => { if (x.zoom && !imgs.includes(url(x.src))) imgs.push(url(x.src)); });
   }
-  { const lk = document.createElement('link'); lk.rel = 'stylesheet'; lk.href = '/css/menu-coca.css'; document.head.appendChild(lk); }
+  { const lk = document.createElement('link'); lk.rel = 'stylesheet'; lk.href = '/css/menu-coca.css?v=20261125'; document.head.appendChild(lk); }
   const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; };
 
   // Trang Buffet Coca trưa: thiết kế riêng (css/menu-coca.css), chai Coca 1,5L, tem giá vàng 15K.
   function cocaParts(L) {
-    const h = (cls, html) => { const d = mk('div', cls); d.innerHTML = html; return d; };
-    const clock = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
-    const img = mk('img', 'cc-bottle'); img.src = '/img/menu/coca-1l5.webp'; img.alt = 'Coca 1,5L'; img.decoding = 'async';
-    const stage = mk('div', 'cc-stage'); stage.append(mk('div', 'cc-glow'), mk('div', 'cc-floor'));
-    for (let i = 0; i < 5; i++) stage.append(mk('i', 'cc-b'));
-    stage.append(img);
-    const k = mk('div', 'cc-kana', 'コーラ'); k.setAttribute('aria-hidden', 'true');
-    const top = h('cc-top', ''); top.append(mk('span', 'cc-pill', L.cS), mk('span', 'cc-jp', '飲'));
-    const head = h('cc-head', ''); const t = mk('h2', 'cc-title', L.cT); t.append(mk('em', '', L.cT2));
-    head.append(mk('p', 'cc-eyebrow', L.cEb), t, mk('div', 'cc-rule'), mk('p', 'cc-tag', L.cTag));
-    const seal = h('cc-seal', ''); seal.append(mk('div', 'cc-price', '15K'), mk('div', 'cc-per', L.perGuest));
-    const foot = h('cc-foot', `<span>${clock}<div>${L.cHr}<b>10:30 – 14:00</b></div></span><span><div>${L.cHot}<b>0934 971 972</b></div></span>`);
-    foot.lastChild.style.textAlign = 'right';
-    return [k, mk('div', 'cc-frame'), top, head, stage, seal, foot];
+    // Poster dựng sẵn thành ảnh (img/menu/coca-poster-vi|en.webp) nên chữ và hình không bao giờ chồng lấn, không phụ thuộc font.
+    const img = mk('img', 'cc-poster'); img.src = '/img/menu/coca-poster-' + (L.cL || 'vi') + '.webp?v=20261125';
+    img.alt = L.cT + ' ' + L.cT2 + ' – 15K – 10:30–14:00 – 0934 971 972'; img.decoding = 'async';
+    return [img];
   }
+
   function pageEl(pg, idx) {
     const L = TXT[lang()], e = mk('div', 'pg');
     if (pg.t === 'cover') {
