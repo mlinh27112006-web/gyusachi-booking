@@ -26,16 +26,20 @@
           <button type="button" class="btn sm" id="r-csv2" data-kind="days">Tải CSV theo ngày</button>
         </div>
         <p class="err" id="r-err" role="alert"></p>
+        <p class="muted" id="r-ok" aria-live="polite"></p>
         <div id="r-body"></div>`;
       const $ = (s) => root.querySelector(s);
       let dead = false; let reqId = 0;
 
       async function load() {
-        const my = ++reqId; $('#r-err').textContent = '';
+        const my = ++reqId; $('#r-err').textContent = ''; $('#r-ok').textContent = 'Đang tải báo cáo…';
+        const go = $('#r-go'); go.disabled = true; $('#r-body').style.opacity = '.45';
         try {
           const d = await Admin.api('GET', `/api/staff/reports?from=${st.from}&to=${st.to}`);
           if (my !== reqId || dead) return; draw(d);
-        } catch (e) { if (!dead) { $('#r-err').textContent = errText(e); $('#r-body').textContent = ''; } }
+          $('#r-ok').textContent = `Đã cập nhật lúc ${new Date().toLocaleTimeString('vi-VN')}.`;
+        } catch (e) { if (!dead) { $('#r-err').textContent = errText(e); $('#r-ok').textContent = ''; $('#r-body').textContent = ''; } }
+        finally { if (!dead) { go.disabled = false; $('#r-body').style.opacity = ''; } }
       }
 
       function draw(d) {
