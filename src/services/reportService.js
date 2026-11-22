@@ -14,15 +14,11 @@ const pct = (a, b) => (b > 0 ? Math.round((a / b) * 1000) / 10 : 0);
 async function build(from, to) {
   const p = [from, to];
 
-  const status = await db.query(
+  const q_status = db.query(
     `SELECT r.status, count(*)::int AS n, COALESCE(sum(r.party_size), 0)::int AS guests
        FROM reservations r WHERE ${RANGE_SQL} GROUP BY r.status`, p);
-  const byStatus = { confirmed: 0, completed: 0, no_show: 0, cancelled: 0 };
-  const guestsByStatus = { confirmed: 0, completed: 0, no_show: 0, cancelled: 0 };
-  for (const r of status.rows) { byStatus[r.status] = r.n; guestsByStatus[r.status] = r.guests; }
-  const total = Object.values(byStatus).reduce((a, b) => a + b, 0);
 
-  const day = await db.query(
+  const q_day = db.query(
     `SELECT to_char((r.start_time AT TIME ZONE ${LOCAL})::date, 'YYYY-MM-DD') AS d,
             count(*)::int AS total,
             count(*) FILTER (WHERE r.status IN ('confirmed','completed'))::int AS kept,
@@ -31,34 +27,45 @@ async function build(from, to) {
             count(*) FILTER (WHERE r.status = 'no_show')::int AS no_show
        FROM reservations r WHERE ${RANGE_SQL} GROUP BY 1 ORDER BY 1`, p);
 
-  const channel = await db.query(
+  const q_channel = db.query(
     `SELECT r.channel, count(*)::int AS total,
             count(*) FILTER (WHERE r.status = 'cancelled')::int AS cancelled,
             count(*) FILTER (WHERE r.status = 'no_show')::int AS no_show
        FROM reservations r WHERE ${RANGE_SQL} GROUP BY r.channel`, p);
 
   // Giờ cao điểm: theo giờ hẹn, không tính lượt đã hủy.
-  const hour = await db.query(
+  const q_hour = db.query(
     `SELECT extract(hour FROM r.start_time AT TIME ZONE ${LOCAL})::int AS h,
             count(*)::int AS n, COALESCE(sum(r.party_size), 0)::int AS guests
        FROM reservations r WHERE ${RANGE_SQL} AND r.status <> 'cancelled' GROUP BY 1 ORDER BY 1`, p);
 
   // Thời gian bàn thực sự được giữ: lượt đã về thì tính đến giờ về, lượt khác tính hết giờ giữ bàn.
   // Không tính lượt hủy và lượt không đến (bàn đó được trả lại).
-  const tables = await db.query(
+  const q_tables = db.query(
     `SELECT t.code, t.floor, t.capacity, count(r.id)::int AS n,
             COALESCE(sum(extract(epoch FROM (LEAST(r.end_time, COALESCE(r.released_at, r.end_time)) - r.start_time)) / 60), 0)::int AS booked_min
        FROM dining_tables t
        LEFT JOIN reservations r ON r.table_id = t.id AND ${RANGE_SQL} AND r.status IN ('confirmed','completed')
       WHERE t.is_active GROUP BY t.id ORDER BY t.floor, t.code`, p);
 
-  const seatMin = await db.query(
+  const q_seatMin = db.query(
     `SELECT COALESCE(sum(r.party_size * extract(epoch FROM (LEAST(r.end_time, COALESCE(r.released_at, r.end_time)) - r.start_time)) / 60), 0)::bigint AS sm
        FROM reservations r WHERE ${RANGE_SQL} AND r.status IN ('confirmed','completed')`, p);
-  const seats = (await db.query('SELECT COALESCE(sum(capacity), 0)::int AS s FROM dining_tables WHERE is_active')).rows[0].s;
+  const q_seats = db.query('SELECT COALESCE(sum(capacity), 0)::int AS s FROM dining_tables WHERE is_active');
+
+  const q_noShowCustomers = db.query(
+    `SELECT full_name, phone, no_show_count FROM customers WHERE no_show_count > 0
+      ORDER BY no_show_count DESC, full_name LIMIT 5`);
+  const q_hours = getOpeningHours();
+  // Chạy song song các truy vấn (mỗi truy vấn tới DB trên mạng mất vài trăm ms, chạy nối đuôi sẽ rất chậm).
+  const [status, day, channel, hour, tables, seatMin, seatsQ, hours, noShowCustomers] = await Promise.all([q_status, q_day, q_channel, q_hour, q_tables, q_seatMin, q_seats, q_hours, q_noShowCustomers]);
+  const seats = seatsQ.rows[0].s;
+  const byStatus = { confirmed: 0, completed: 0, no_show: 0, cancelled: 0 };
+  const guestsByStatus = { confirmed: 0, completed: 0, no_show: 0, cancelled: 0 };
+  for (const r of status.rows) { byStatus[r.status] = r.n; guestsByStatus[r.status] = r.guests; }
+  const total = Object.values(byStatus).reduce((a, b) => a + b, 0);
 
   // Số phút mở cửa trong khoảng ngày (theo bảng opening_hours).
-  const hours = await getOpeningHours();
   let openMinutes = 0;
   for (let d = from; d <= to; d = rules.addDays(d, 1)) {
     for (const h of hours.filter((x) => x.day_of_week === rules.isoDayOfWeek(d))) {
@@ -66,9 +73,6 @@ async function build(from, to) {
     }
   }
 
-  const noShowCustomers = await db.query(
-    `SELECT full_name, phone, no_show_count FROM customers WHERE no_show_count > 0
-      ORDER BY no_show_count DESC, full_name LIMIT 5`);
 
   const kept = byStatus.confirmed + byStatus.completed;
   return {
