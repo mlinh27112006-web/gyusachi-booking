@@ -10,6 +10,7 @@ router.get('/tables/map', requirePermission('table.view'), c.staffTableMap);
 router.post('/reservations', requirePermission('reservation.create'), c.staffCreate);
 router.get('/reservations', requirePermission('reservation.view'), c.staffList);
 router.get('/reservations/:id', requirePermission('reservation.view'), c.staffGet);
+router.patch('/reservations/:id', requirePermission('reservation.update_status'), c.staffUpdate);
 router.post('/reservations/:id/:action', requirePermission('reservation.update_status'), c.staffAction);
 
 module.exports = router;

@@ -27,18 +27,20 @@ const receive = wrap(async (req, res) => {
   }
   const b = body(req);
   if (b.object !== 'page' || !Array.isArray(b.entry)) throw new AppError(404, 'Sự kiện không được hỗ trợ', 'NOT_SUPPORTED');
+  let failed = 0;
   for (const entry of b.entry) {
     for (const ev of Array.isArray(entry.messaging) ? entry.messaging : []) {
       const text = ev && ev.message && typeof ev.message.text === 'string' ? ev.message.text.trim() : '';
       const senderId = ev && ev.sender && ev.sender.id ? String(ev.sender.id) : '';
       if (!text || !senderId || (ev.message && ev.message.is_echo)) continue;
-      // Lỗi ở một tin nhắn không được làm Facebook gửi lại cả lô.
+      // Một tin lỗi không chặn các tin còn lại. Tin lỗi đã được nhả mid, nên nếu Facebook gửi lại cả lô thì tin đã xong bị bỏ qua (trùng mid), tin lỗi được xử lý lại.
       await fb.handleIncoming({
         senderId, text: text.slice(0, 2000), mid: ev.message.mid ? String(ev.message.mid) : null,
         raw: { event: ev }, signatureValid: true, isDemo: false,
-      }).catch((e) => console.error('Lỗi xử lý tin nhắn Facebook:', e.message));
+      }).catch((e) => { failed += 1; console.error('Lỗi xử lý tin nhắn Facebook:', e.message); });
     }
   }
+  if (failed > 0) return res.status(500).type('text/plain').send('RETRY'); // để Facebook thử gửi lại
   res.status(200).type('text/plain').send('EVENT_RECEIVED');
 });
 

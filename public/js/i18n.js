@@ -38,6 +38,7 @@
       rName: 'Họ tên', rPhone: 'Số điện thoại', rWhen: 'Thời gian', rTable: 'Bàn', rParty: 'Số khách',
       rTableVal: '{code}, tầng {floor}',
       rWhenVal: '{from} đến {to}, ngày {date}',
+      kitchenNote: 'Bếp đóng cùng giờ đóng cửa của ca: 14:00 (ca trưa, thứ 2 – thứ 6) và 22:00 (ca tối, cả tuần). Quý khách đến muộn trong ca vẫn được phục vụ, nhưng bếp ngừng nhận món khi hết ca. Thời gian dùng bữa tối đa 2 tiếng tính từ giờ đặt bàn; bàn được dọn trong 15 phút kế tiếp.',
       holdNote: 'Bạn có 2 tiếng dùng bàn kể từ giờ hẹn. Nếu đến trễ, nhà hàng giữ bàn tối đa 30 phút; quá 30 phút lượt đặt có thể bị hủy để nhường bàn cho khách khác.',
       privacyNote: 'Họ tên và số điện thoại dùng để nhà hàng liên hệ khi cần, và để bạn tra cứu hoặc hủy lượt đặt (cần đúng số điện thoại này cùng mã đặt bàn). Thông tin chỉ dùng cho việc đặt bàn.',
       lookupLink: 'Tra cứu hoặc hủy lượt đặt', bookAgain: 'Đặt thêm bàn khác',
@@ -57,7 +58,7 @@
       cancelYes: 'Hủy lượt đặt', cancelKeep: 'Giữ lại', cancelling: 'Đang hủy',
       cancelledOk: 'Đã hủy lượt đặt. Bàn đã được trả lại.',
       cannotCancel: 'Lượt đặt này không thể hủy online. Vui lòng gọi hotline {hotline}.',
-      searchAgain: 'Tra cứu lượt khác',
+      searchAgain: 'Tra cứu lượt khác', addCal: 'Thêm vào lịch',
     },
     en: {
       brandSub: 'Yakiniku Da Nang',
@@ -96,6 +97,7 @@
       rName: 'Name', rPhone: 'Phone', rWhen: 'Time', rTable: 'Table', rParty: 'Guests',
       rTableVal: '{code}, floor {floor}',
       rWhenVal: '{from} to {to}, {date}',
+      kitchenNote: 'The kitchen closes when each service ends: 14:00 (lunch, Mon–Fri) and 22:00 (dinner, every day). Late-evening guests are still welcome, but the kitchen stops taking orders at closing time. You have up to 2 hours at the table from your booking time; the table is then reset for 15 minutes.',
       holdNote: 'You have 2 hours at the table from the booking time. If you are late, we hold the table for up to 30 minutes; after that the booking may be cancelled so other guests can use the table.',
       privacyNote: 'Your name and phone number are used so the restaurant can contact you if needed, and so you can look up or cancel the booking (you need this exact phone number plus the booking code). They are used only for the booking.',
       lookupLink: 'Find or cancel a booking', bookAgain: 'Book another table',
@@ -115,7 +117,7 @@
       cancelYes: 'Cancel booking', cancelKeep: 'Keep it', cancelling: 'Cancelling',
       cancelledOk: 'Booking cancelled. The table has been released.',
       cannotCancel: 'This booking cannot be cancelled online. Please call {hotline}.',
-      searchAgain: 'Find another booking',
+      searchAgain: 'Find another booking', addCal: 'Add to calendar',
     },
   };
 

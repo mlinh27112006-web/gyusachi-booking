@@ -68,21 +68,47 @@ function describeError(status, code, msg) {
 
 // Nhận một tin nhắn đến (thật hoặc mô phỏng): ghi log, tìm câu trả lời tự động, ghi log trả lời.
 // Tin nhắn thật có mid: nếu đã xử lý rồi (Facebook gửi lại) thì bỏ qua, không trả lời hai lần.
+// Chỉ mục duy nhất theo mid của tin nhắn đến (tạo một lần khi cần). Nếu dữ liệu cũ đã có mid trùng thì bỏ qua lỗi, vẫn còn kiểm tra ở mã.
+let midIndexReady = null;
+function ensureMidIndex() {
+  if (!midIndexReady) {
+    midIndexReady = db.query(
+      `CREATE UNIQUE INDEX IF NOT EXISTS channel_logs_in_mid_uq ON channel_logs ((raw_payload->>'mid'))
+        WHERE channel = 'fanpage' AND direction = 'in' AND raw_payload->>'mid' IS NOT NULL`
+    ).then(() => true).catch((e) => { console.error('Không tạo được chỉ mục chống trùng mid (có thể dữ liệu cũ bị trùng mid). Hãy dọn dòng trùng rồi chạy lại 006_hardening.sql:', e.message); return false; });
+  }
+  return midIndexReady;
+}
+
 async function handleIncoming({ senderId, senderName, text, mid, raw, signatureValid, isDemo }) {
-  if (mid) {
-    const dup = await db.query(`SELECT 1 FROM channel_logs WHERE channel = 'fanpage' AND raw_payload->>'mid' = $1 LIMIT 1`, [mid]);
+  const hasIndex = await ensureMidIndex();
+  // Không có chỉ mục duy nhất (dữ liệu cũ trùng mid): vẫn kiểm tra trước bằng truy vấn, chỉ còn khe hở nếu hai tin đến đúng cùng lúc.
+  if (mid && !hasIndex) {
+    const dup = await db.query(`SELECT 1 FROM channel_logs WHERE channel = 'fanpage' AND direction = 'in' AND raw_payload->>'mid' = $1 LIMIT 1`, [mid]);
     if (dup.rowCount > 0) return { duplicate: true };
   }
+  const inPayload = JSON.stringify({ ...(raw || {}), mid: mid || null, senderName: senderName || null });
+  let claimId = null;
+  const insertIn = (client) => client.query(
+    `INSERT INTO channel_logs (channel, direction, external_user_id, message_text, raw_payload, signature_valid, is_demo)
+     VALUES ('fanpage', 'in', $1, $2, $3::jsonb, $4, $5) ON CONFLICT DO NOTHING RETURNING id`,
+    [senderId, text, inPayload, signatureValid, isDemo]);
+  if (mid) {
+    // Ghi nhận tin đến NGAY (trước khi xử lý): chỉ một request thắng được dòng có mid này, request đến cùng lúc sẽ bị bỏ qua.
+    const claimed = await insertIn(db);
+    if (claimed.rowCount === 0) return { duplicate: true };
+    claimId = claimed.rows[0].id;
+  } else {
+    await insertIn(db);
+  }
+  // Nếu xử lý lỗi giữa chừng: nhả mid đã ghi để Facebook gửi lại thì được xử lý lại (không bị coi là đã xong), rồi báo lỗi lên trên.
+  try {
   // Bot đặt bàn xử lý trước; không phải yêu cầu đặt bàn thì dùng kịch bản từ khóa.
   let botReply = null;
   try { botReply = await bot.handle(senderId, text); } catch (e) { console.error('Lỗi bot đặt bàn:', e.message); }
   const reply = botReply ? { keyword: 'bot đặt bàn', text: botReply.text } : await findReply(text);
   let outId = null;
   await db.withTransaction(async (client) => {
-    await client.query(
-      `INSERT INTO channel_logs (channel, direction, external_user_id, message_text, raw_payload, signature_valid, is_demo)
-       VALUES ('fanpage', 'in', $1, $2, $3::jsonb, $4, $5)`,
-      [senderId, text, JSON.stringify({ ...(raw || {}), mid: mid || null, senderName: senderName || null }), signatureValid, isDemo]);
     const out = await client.query(
       `INSERT INTO channel_logs (channel, direction, external_user_id, message_text, raw_payload, is_demo)
        VALUES ('fanpage', 'out', $1, $2, $3::jsonb, $4) RETURNING id`,
@@ -97,6 +123,10 @@ async function handleIncoming({ senderId, senderName, text, mid, raw, signatureV
       [outId, JSON.stringify(r.ok ? { delivered: 'sent' } : { delivered: 'failed', error: r.reason })]).catch(() => {});
   }
   return { duplicate: false, reply: reply.text, matchedKeyword: reply.keyword };
+  } catch (e) {
+    if (claimId) await db.query('DELETE FROM channel_logs WHERE id = $1', [claimId]).catch(() => {});
+    throw e;
+  }
 }
 
 // Ghi nhận request sai chữ ký để có bằng chứng; không xử lý nội dung.

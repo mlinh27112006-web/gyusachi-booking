@@ -57,8 +57,13 @@ async function build(from, to) {
     `SELECT full_name, phone, no_show_count FROM customers WHERE no_show_count > 0
       ORDER BY no_show_count DESC, full_name LIMIT 5`);
   const q_hours = getOpeningHours();
+  // Lịch đóng cửa/bảo trì trong khoảng báo cáo: trừ khỏi số phút mở cửa khi tính công suất.
+  const q_closures = require('./maintenanceService').ensureSchema().then(() => db.query(
+    `SELECT to_char(date_from, 'YYYY-MM-DD') AS df, to_char(date_to, 'YYYY-MM-DD') AS dt,
+            to_char(time_from, 'HH24:MI') AS tf, to_char(time_to, 'HH24:MI') AS tt
+       FROM closures WHERE date_to >= $1::date AND date_from <= $2::date`, [from, to]));
   // Chạy song song các truy vấn (mỗi truy vấn tới DB trên mạng mất vài trăm ms, chạy nối đuôi sẽ rất chậm).
-  const [status, day, channel, hour, tables, seatMin, seatsQ, hours, noShowCustomers] = await Promise.all([q_status, q_day, q_channel, q_hour, q_tables, q_seatMin, q_seats, q_hours, q_noShowCustomers]);
+  const [status, day, channel, hour, tables, seatMin, seatsQ, hours, noShowCustomers, closuresQ] = await Promise.all([q_status, q_day, q_channel, q_hour, q_tables, q_seatMin, q_seats, q_hours, q_noShowCustomers, q_closures]);
   const seats = seatsQ.rows[0].s;
   const byStatus = { confirmed: 0, completed: 0, no_show: 0, cancelled: 0 };
   const guestsByStatus = { confirmed: 0, completed: 0, no_show: 0, cancelled: 0 };
@@ -68,8 +73,15 @@ async function build(from, to) {
   // Số phút mở cửa trong khoảng ngày (theo bảng opening_hours).
   let openMinutes = 0;
   for (let d = from; d <= to; d = rules.addDays(d, 1)) {
+    const closed = closuresQ.rows.filter((c) => c.df <= d && d <= c.dt)
+      .map((c) => (c.tf ? [rules.parseTime(c.tf), rules.parseTime(c.tt)] : [0, 1440]));
     for (const h of hours.filter((x) => x.day_of_week === rules.isoDayOfWeek(d))) {
-      openMinutes += rules.parseTime(h.close_time) - rules.parseTime(h.open_time);
+      const o = rules.parseTime(h.open_time); const z = rules.parseTime(h.close_time);
+      // Phần giờ mở cửa bị đóng cửa: gộp các khung đóng cửa chồng nhau rồi cắt theo giờ mở cửa.
+      const cut = closed.map(([a, b]) => [Math.max(a, o), Math.min(b, z)]).filter(([a, b]) => b > a).sort((x, y) => x[0] - y[0]);
+      let covered = 0; let end = -1;
+      for (const [a, b] of cut) { const s0 = Math.max(a, end); if (b > s0) covered += b - s0; end = Math.max(end, b); }
+      openMinutes += z - o - covered;
     }
   }
 

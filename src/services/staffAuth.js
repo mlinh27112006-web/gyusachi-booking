@@ -1,8 +1,15 @@
 const db = require('../db');
 
+// Cột ghi thời điểm đổi mật khẩu gần nhất: token đăng nhập phát hành TRƯỚC thời điểm này bị từ chối.
+let colReady = null;
+function ensureCol() {
+  if (!colReady) colReady = db.query('ALTER TABLE staff ADD COLUMN IF NOT EXISTS password_changed_at timestamptz').catch((e) => { colReady = null; throw e; });
+  return colReady;
+}
+
 // Lấy nhân viên cùng vai trò và toàn bộ quyền của vai trò đó trong một câu truy vấn.
 const SELECT_STAFF = `
-  SELECT s.id, s.username, s.password_hash, s.full_name, s.is_active,
+  SELECT s.id, s.username, s.password_hash, s.full_name, s.is_active, s.password_changed_at,
          r.code AS role_code, r.name AS role_name,
          COALESCE(
            array_agg(rp.permission_code ORDER BY rp.permission_code)
@@ -14,6 +21,7 @@ const SELECT_STAFF = `
 const GROUP_BY = ' GROUP BY s.id, r.id';
 
 async function findByUsername(username) {
+  await ensureCol();
   const { rows } = await db.query(
     `${SELECT_STAFF} WHERE lower(s.username) = lower($1)${GROUP_BY}`,
     [username]
@@ -22,6 +30,7 @@ async function findByUsername(username) {
 }
 
 async function findById(id) {
+  await ensureCol();
   const { rows } = await db.query(`${SELECT_STAFF} WHERE s.id = $1${GROUP_BY}`, [id]);
   return rows[0] || null;
 }
@@ -38,4 +47,5 @@ function toUser(row) {
   };
 }
 
-module.exports = { findByUsername, findById, toUser };
+module.exports = {
+  ensureCol, findByUsername, findById, toUser };

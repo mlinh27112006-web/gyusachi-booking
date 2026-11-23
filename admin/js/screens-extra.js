@@ -135,7 +135,7 @@
   // ---------- Nhật ký ----------
   const ACTION_TEXT = {
     'reservation.create': 'Tạo đặt bàn', 'reservation.arrive': 'Khách đã đến', 'reservation.release': 'Khách đã về', 'reservation.no_show': 'Khách không đến',
-    'reservation.cancel': 'Hủy đặt bàn', 'reservation.status': 'Đổi trạng thái', 'staff.create': 'Tạo nhân viên', 'staff.update': 'Sửa nhân viên',
+    'reservation.cancel': 'Hủy đặt bàn', 'reservation.update': 'Sửa lượt đặt', 'reservation.status': 'Đổi trạng thái', 'staff.create': 'Tạo nhân viên', 'staff.update': 'Sửa nhân viên',
     'staff.reset_password': 'Đặt lại mật khẩu', 'staff.change_password': 'Đổi mật khẩu', 'facebook.reply': 'Trả lời Facebook',
     'facebook.rule_create': 'Thêm kịch bản', 'facebook.rule_update': 'Sửa kịch bản', 'facebook.rule_delete': 'Xóa kịch bản',
     'waitlist.contacted': 'Đã gọi khách chờ', 'waitlist.cancel': 'Bỏ khách khỏi danh sách chờ',

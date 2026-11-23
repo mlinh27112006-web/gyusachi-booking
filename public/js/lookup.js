@@ -48,6 +48,7 @@
     else if (!d.canCancel && d.status === 'confirmed') { msg.hidden = false; msg.textContent = t('cannotCancel', { hotline }); }
     else msg.hidden = true;
     $('cancel-btn').hidden = !d.canCancel;
+    $('ics-btn').hidden = d.status !== 'confirmed';
     $('cancel-ask').hidden = true; $('result-actions').hidden = false;
   }
 
@@ -61,7 +62,7 @@
     busy = true; const b = $('find-btn'); b.disabled = true; b.textContent = t('finding');
     try {
       const data = await api('/api/reservations/lookup', { phone, code });
-      current = { phone, code, data }; lastMsg = null; render();
+      current = { phone, code, data }; lastMsg = null; render(); remember(phone, code);
       $('r-code').parentElement.scrollIntoView({ block: 'center' });
     } catch (e) {
       if (e.code === 'INVALID_PHONE') fieldError('e-phone', errText(e));
@@ -83,11 +84,24 @@
     } finally { busy = false; y.disabled = false; y.textContent = t('cancelYes'); }
   }
 
+  // Nhớ lượt vừa tra cứu trên chính thiết bị này để lần sau khỏi gõ lại (chỉ lưu trong trình duyệt của khách).
+  function remember(phone, code) { try { localStorage.setItem('gyu:last', JSON.stringify({ phone, code })); } catch (e) { /* bỏ qua */ } }
+  function recall() {
+    try {
+      const v = JSON.parse(localStorage.getItem('gyu:last') || 'null'); const q = new URLSearchParams(location.search);
+      if (v && v.phone && !$('l-phone').value) $('l-phone').value = v.phone;
+      if (v && v.code && !$('l-code').value) $('l-code').value = v.code;
+      if (q.get('code') && !$('l-code').value) $('l-code').value = formatCode(q.get('code'));
+    } catch (e) { /* bỏ qua */ }
+  }
+
   async function init() {
     I18N.apply();
     try { const s = await (await fetch('/api/settings')).json(); hotline = s.hotline; $('foot-hotline').textContent = hotline; $('foot-hotline').href = `tel:${hotline}`; } catch (e) { /* hotline chỉ là phụ */ }
     document.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => I18N.setLang(b.dataset.lang, () => { render(); })));
     $('find-form').addEventListener('submit', find);
+    recall();
+    $('ics-btn').addEventListener('click', () => { if (current) window.GyuICS.download(current.data, hotline, I18N.lang || document.documentElement.lang); });
     $('l-code').addEventListener('input', (e) => { const v = formatCode(e.target.value); if (v !== e.target.value) e.target.value = v; });
     $('cancel-btn').addEventListener('click', () => { $('cancel-q').textContent = t('cancelAsk'); $('cancel-ask').hidden = false; $('result-actions').hidden = true; $('cancel-keep').focus(); });
     $('cancel-keep').addEventListener('click', () => { $('cancel-ask').hidden = true; $('result-actions').hidden = false; $('cancel-btn').focus(); });

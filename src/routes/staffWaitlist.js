@@ -18,7 +18,7 @@ router.post('/', requirePermission('reservation.create'), async (req, res, next)
     const b = req.body && typeof req.body === 'object' ? req.body : {};
     const [settings, hours] = await Promise.all([getSettings(), getOpeningHours()]);
     const party = Number(b.party);
-    if (!Number.isInteger(party) || party < 1 || party > 20) throw new AppError(400, 'Số khách phải từ 1 đến 20', 'INVALID_PARTY');
+    if (!Number.isInteger(party) || party < 1 || party > 8) throw new AppError(400, 'Số khách phải từ 1 đến 8 (bàn lớn nhất chứa 8 người)', 'INVALID_PARTY');
     const start = rules.validateSlot(b.date, b.time, settings, hours);
     const channel = ['hotline', 'fanpage'].includes(b.channel) ? b.channel : (req.user.role === 'fanpage_staff' ? 'fanpage' : 'hotline');
     const r = await waitlist.join({

@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const db = require('../db');
+const staffAuth = require('./staffAuth');
 const { AppError } = require('../errors');
 
 const LOCAL = "'Asia/Ho_Chi_Minh'";
@@ -143,6 +144,7 @@ async function updateMember(actor, id, input) {
 
 // ---- Đặt lại mật khẩu cho người khác ----
 async function resetPassword(actor, id, newPassword) {
+  await staffAuth.ensureCol(); // trước giao dịch (ALTER TABLE không được chạy khi giao dịch đang giữ khóa bảng staff)
   const password = validatePassword(newPassword);
   const hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
   return db.withTransaction(async (client) => {
@@ -150,20 +152,21 @@ async function resetPassword(actor, id, newPassword) {
     if (!cur) throw new AppError(404, 'Không tìm thấy nhân viên', 'NOT_FOUND');
     if (cur.id === actor.id) throw new AppError(400, 'Hãy dùng chức năng đổi mật khẩu của chính bạn', 'SELF_CHANGE');
     assertCanManageRole(actor, cur.role_code);
-    await client.query('UPDATE staff SET password_hash = $1 WHERE id = $2', [hash, id]);
+    await client.query('UPDATE staff SET password_hash = $1, password_changed_at = now() WHERE id = $2', [hash, id]);
     await audit(client, actor, 'staff.reset_password', id, { username: cur.username });
   });
 }
 
 // ---- Tự đổi mật khẩu ----
 async function changeOwnPassword(actor, oldPassword, newPassword) {
+  await staffAuth.ensureCol(); // trước giao dịch (ALTER TABLE không được chạy khi giao dịch đang giữ khóa bảng staff)
   const password = validatePassword(newPassword);
   const { rows } = await db.query('SELECT password_hash FROM staff WHERE id = $1', [actor.id]);
   const ok = rows.length > 0 && await bcrypt.compare(String(oldPassword || ''), rows[0].password_hash);
   if (!ok) throw new AppError(400, 'Mật khẩu hiện tại không đúng', 'BAD_OLD_PASSWORD');
   const hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
   await db.withTransaction(async (client) => {
-    await client.query('UPDATE staff SET password_hash = $1 WHERE id = $2', [hash, actor.id]);
+    await client.query('UPDATE staff SET password_hash = $1, password_changed_at = now() WHERE id = $2', [hash, actor.id]);
     await audit(client, actor, 'staff.change_password', actor.id, { username: actor.username });
   });
 }

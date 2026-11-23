@@ -25,7 +25,8 @@ async function report(req, res, next) {
 async function exportCsv(req, res, next) {
   try {
     const { from, to } = range(req);
-    const kind = req.query.kind === 'days' ? 'days' : 'reservations';
+    const kind = req.query.kind;
+    if (kind !== 'days' && kind !== 'reservations') throw new AppError(400, 'kind phải là reservations hoặc days', 'INVALID_KIND');
     const body = kind === 'days' ? await csv.days(from, to) : await csv.reservations(from, to);
     await db.query(
       `INSERT INTO audit_logs (staff_id, actor_label, action, entity_type, entity_id, detail)

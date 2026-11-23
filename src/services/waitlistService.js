@@ -34,22 +34,29 @@ function fmtDate(d) {
 
 // Ghi tên chờ. Cùng số điện thoại và cùng giờ đang chờ thì trả lại lượt cũ, không tạo thêm.
 async function join({ name, phone, party, start, channel, externalUserId = null, staffId = null, note = null }) {
-  const dup = await db.query(
-    `${SELECT} WHERE phone = $1 AND start_time = $2::timestamptz AND status IN ('waiting', 'notified') LIMIT 1`, [phone, start]);
-  if (dup.rowCount) return { entry: toDto(dup.rows[0]), existed: true };
-  const cnt = await db.query(
-    "SELECT count(*)::int AS n FROM waitlist WHERE phone = $1 AND status IN ('waiting', 'notified')", [phone]);
-  if (cnt.rows[0].n >= MAX_ACTIVE_PER_PHONE) {
-    throw new AppError(409, `Mỗi số điện thoại chỉ ghi tối đa ${MAX_ACTIVE_PER_PHONE} lượt chờ cùng lúc`, 'WAITLIST_LIMIT');
+  // Kiểm tra trùng, đếm giới hạn và thêm mới nằm trong MỘT giao dịch, khóa theo số điện thoại: hai yêu cầu cùng lúc không vượt được giới hạn.
+  const result = await db.withTransaction(async (client) => {
+    await client.query('SELECT pg_advisory_xact_lock(1002, hashtext($1))', [phone]);
+    const dup = await client.query(
+      `${SELECT} WHERE phone = $1 AND start_time = $2::timestamptz AND status IN ('waiting', 'notified') LIMIT 1`, [phone, start]);
+    if (dup.rowCount) return { entry: toDto(dup.rows[0]), existed: true };
+    const cnt = await client.query(
+      "SELECT count(*)::int AS n FROM waitlist WHERE phone = $1 AND status IN ('waiting', 'notified')", [phone]);
+    if (cnt.rows[0].n >= MAX_ACTIVE_PER_PHONE) {
+      throw new AppError(409, `Mỗi số điện thoại chỉ ghi tối đa ${MAX_ACTIVE_PER_PHONE} lượt chờ cùng lúc`, 'WAITLIST_LIMIT');
+    }
+    const ins = await client.query(
+      `INSERT INTO waitlist (customer_name, phone, party_size, start_time, channel, external_user_id, created_by, note)
+       VALUES ($1, $2, $3, $4::timestamptz, $5, $6, $7, $8) RETURNING id`,
+      [name, phone, party, start, channel, externalUserId, staffId, note]);
+    const row = await client.query(`${SELECT} WHERE id = $1`, [ins.rows[0].id]);
+    return { entry: toDto(row.rows[0]), existed: false };
+  });
+  if (!result.existed) {
+    liveBus.changed();
+    setTimeout(() => check().catch(() => {}), 300); // có thể đang có bàn trống sẵn
   }
-  const ins = await db.query(
-    `INSERT INTO waitlist (customer_name, phone, party_size, start_time, channel, external_user_id, created_by, note)
-     VALUES ($1, $2, $3, $4::timestamptz, $5, $6, $7, $8) RETURNING id`,
-    [name, phone, party, start, channel, externalUserId, staffId, note]);
-  const row = await db.query(`${SELECT} WHERE id = $1`, [ins.rows[0].id]);
-  liveBus.changed();
-  setTimeout(() => check().catch(() => {}), 300); // có thể đang có bàn trống sẵn
-  return { entry: toDto(row.rows[0]), existed: false };
+  return result;
 }
 
 // Danh sách cho nhân viên: lượt đang chờ/đã báo, cộng các lượt vừa đóng trong 24 giờ gần đây.

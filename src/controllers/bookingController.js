@@ -3,6 +3,7 @@ const { getSettings, getOpeningHours } = require('../settings');
 const rules = require('../services/bookingRules');
 const tableService = require('../services/tableService');
 const reservationService = require('../services/reservationService');
+const reminders = require('../services/reminderService');
 const staffRes = require('../services/staffReservationService');
 
 // Chống dò mã đặt bàn: sai quá MAX_FAILS lần trong cửa sổ thì khóa tạm. Đếm theo cả địa chỉ IP lẫn số điện thoại,
@@ -10,7 +11,8 @@ const staffRes = require('../services/staffReservationService');
 const MAX_FAILS = 5;
 const LOCK_MS = 10 * 60 * 1000;
 const attempts = new Map(); // khóa -> { fails, first, lockedUntil }
-const ipOf = (req) => String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || (req.socket && req.socket.remoteAddress) || 'unknown';
+// IP thật do Express tính theo 'trust proxy' (server.js). Không dùng phần đầu của X-Forwarded-For vì khách tự khai được.
+const ipOf = (req) => req.ip || (req.socket && req.socket.remoteAddress) || 'unknown';
 function lookupKeys(req, phone) { return [`ip:${ipOf(req)}`, ...(phone ? [`phone:${phone}`] : [])]; }
 function assertNotLocked(keys, now = Date.now()) {
   let wait = 0;
@@ -158,8 +160,8 @@ function staffChannel(user, requested) {
 async function staffParse(date, time, partyRaw) {
   const [settings, hours] = await Promise.all([getSettings(), getOpeningHours()]);
   const party = Number(partyRaw);
-  if (!Number.isInteger(party) || party < 1 || party > 20) {
-    throw new AppError(400, 'Số khách phải từ 1 đến 20', 'INVALID_PARTY');
+  if (!Number.isInteger(party) || party < 1 || party > 8) {
+    throw new AppError(400, 'Số khách phải từ 1 đến 8. Nhóm đông hơn cần xử lý riêng (ghép bàn) ngoài hệ thống', 'INVALID_PARTY');
   }
   const start = rules.validateSlot(date, time, settings, hours);
   return { party, start, holdMinutes: settings.hold_minutes };
@@ -208,6 +210,7 @@ async function staffCreate(req, res, next) {
       rawRequest: { name: b.name, phone: b.phone, party: b.party, date: b.date, time: b.time, tableId: b.tableId, note: b.note },
     });
     res.status(201).json(reservation);
+    if (reservation.channel === 'fanpage') reminders.sendConfirmation(reservation.bookingCode).catch(() => {});
   } catch (err) { next(err); }
 }
 
@@ -228,6 +231,19 @@ async function staffGet(req, res, next) {
   try { res.json(await staffRes.get(rules.validateId(req.params.id, 'lượt đặt'))); } catch (err) { next(err); }
 }
 
+// PATCH /api/staff/reservations/:id  { tableId?, date?, time?, party? }  sửa lượt đang chờ khách
+async function staffUpdate(req, res, next) {
+  try {
+    const b = body(req);
+    const input = {};
+    if (b.tableId !== undefined) input.tableId = rules.validateId(b.tableId);
+    if (b.date !== undefined) input.date = String(b.date);
+    if (b.time !== undefined) input.time = String(b.time);
+    if (b.party !== undefined) input.party = b.party;
+    res.json(await staffRes.modify(rules.validateId(req.params.id, 'lượt đặt'), input, req.user));
+  } catch (err) { next(err); }
+}
+
 // POST /api/staff/reservations/:id/:action  (arrive | release | no-show | cancel)
 const ACTIONS = { arrive: 'arrive', release: 'release', 'no-show': 'no_show', cancel: 'cancel' };
 async function staffAction(req, res, next) {
@@ -239,7 +255,7 @@ async function staffAction(req, res, next) {
 }
 
 module.exports = {
-  staffList, staffGet, staffAction,
+  staffList, staffGet, staffAction, staffUpdate,
   availability, tableMap, createLock, releaseLock, createPublic, lookup, cancel,
   staffTableMap, staffCreate, staffSlots,
 };

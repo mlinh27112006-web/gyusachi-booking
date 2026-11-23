@@ -35,7 +35,6 @@
   </header>
 
   <main class="page narrow">
-    <noscript><p class="notice">Trang này cần bật JavaScript. Để tra cứu hoặc hủy lượt đặt, bạn có thể gọi hotline <a href="tel:0934971972">0934 971 972</a>. / This page needs JavaScript. To find or cancel a booking, call <a href="tel:0934971972">0934 971 972</a>.</p></noscript>
     <div class="page-head">
       <h1 data-i18n="lookupTitle">Tra cứu đặt bàn</h1>
       <p data-i18n="lookupLead"></p>
@@ -70,6 +69,7 @@
         </div>
       </div>
       <div class="btn-row" id="result-actions">
+        <button class="btn" type="button" id="ics-btn" data-i18n="addCal" hidden></button>
         <button class="btn danger-ghost" type="button" id="cancel-btn" data-i18n="cancelBtn" hidden></button>
         <button class="btn ghost" type="button" id="again" data-i18n="searchAgain"></button>
       </div>
@@ -80,6 +80,7 @@
   <div class="toast" id="toast" role="alert"></div>
 
   <script src="/js/i18n.js"></script>
+  <script src="/js/ics.js"></script>
   <script src="/js/lookup.js"></script>
   <script src="/js/footer.js"></script>
   <script src="/js/pwa.js" defer></script>

@@ -21,7 +21,7 @@ function remainingLockMs(username, now = Date.now()) {
 }
 
 function recordFailure(username, now = Date.now()) {
-  if (attempts.size >= MAX_ENTRIES) attempts.clear(); // tránh đầy bộ nhớ khi bị dò tên đăng nhập
+  if (attempts.size >= MAX_ENTRIES) attempts.delete(attempts.keys().next().value); // đầy thì bỏ mục cũ nhất, không xóa hết (tránh mở khóa hàng loạt)
   const key = keyOf(username);
   const entry = attempts.get(key) || { fails: 0, lastFail: now, lockedUntil: 0 };
   // Sai từ lâu rồi thì đếm lại từ đầu.

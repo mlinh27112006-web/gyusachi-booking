@@ -19,7 +19,7 @@ function limited(ip) {
 // Khung chat trên website dùng chung bộ não với bot fanpage; lượt đặt tạo ra có kênh "website".
 router.post('/chat', async (req, res, next) => {
   try {
-    const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || (req.socket && req.socket.remoteAddress) || 'unknown';
+    const ip = req.ip || (req.socket && req.socket.remoteAddress) || 'unknown'; // IP thật theo 'trust proxy'
     if (limited(ip)) throw new AppError(429, 'Bạn nhắn hơi nhanh, vui lòng thử lại sau ít phút', 'RATE_LIMITED');
     const b = req.body && typeof req.body === 'object' ? req.body : {};
     const text = String(b.text || '').trim();

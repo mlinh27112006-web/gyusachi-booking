@@ -73,7 +73,7 @@
           <section class="panel"><div class="panel-head"><h2>1. Ngày, giờ và số khách</h2></div>
             <div class="form-row">${dateNavHtml(st.date)}
               <label>Giờ <select id="f-time"></select></label>
-              <label>Số khách <input type="number" id="f-party" min="1" max="20" value="${st.party}" inputmode="numeric"></label>
+              <label>Số khách <input type="number" id="f-party" min="1" max="8" value="${st.party}" inputmode="numeric"></label>
               ${needChannel ? `<label>Kênh <select id="f-ch"><option value="hotline">Hotline</option><option value="fanpage">Fanpage</option></select></label>` : ''}
             </div>
             <p class="hint">Mỗi lượt giữ một bàn trong 2 giờ 15 phút nên số khách tối đa bằng bàn lớn nhất (8 chỗ).</p>
@@ -123,10 +123,10 @@
 
       function draw() {
         const plan = $('#plan');
-        const partyOk = Number.isInteger(st.party) && st.party >= 1 && st.party <= 20;
+        const partyOk = Number.isInteger(st.party) && st.party >= 1 && st.party <= 8;
         if (!st.time || !partyOk || st.tables.length === 0) {
           plan.textContent = ''; const d = document.createElement('div'); d.className = 'aplan-empty';
-          d.textContent = !st.time ? 'Chưa có giờ nhận khách trong ngày này.' : !partyOk ? 'Nhập số khách từ 1 đến 20.' : 'Đang tải sơ đồ...'; plan.appendChild(d);
+          d.textContent = !st.time ? 'Chưa có giờ nhận khách trong ngày này.' : !partyOk ? 'Nhập số khách từ 1 đến 8.' : 'Đang tải sơ đồ...'; plan.appendChild(d);
           floorTabs($('#tabs'), [], st.floor, null, (f) => { st.floor = f; draw(); }); $('#pick-sum').textContent = ''; return;
         }
         floorTabs($('#tabs'), st.tables, st.floor, (list) => `${list.filter((x) => x.selectable).length} bàn trống`, (f) => { st.floor = f; draw(); });
@@ -141,7 +141,7 @@
       bindDateNav(root, () => st.date, (d) => { st.date = d; $('#d-input').value = d; st.tableId = null; loadAll(true); });
       $('#f-time').addEventListener('change', (e) => { st.time = e.target.value; st.tableId = null; loadMap(); });
       let pt = null;
-      $('#f-party').addEventListener('input', (e) => { st.party = Number(e.target.value); clearTimeout(pt); pt = setTimeout(() => { if (Number.isInteger(st.party) && st.party >= 1 && st.party <= 20) loadMap(); else draw(); }, 350); });
+      $('#f-party').addEventListener('input', (e) => { st.party = Number(e.target.value); clearTimeout(pt); pt = setTimeout(() => { if (Number.isInteger(st.party) && st.party >= 1 && st.party <= 8) loadMap(); else draw(); }, 350); });
       if (needChannel) $('#f-ch').addEventListener('change', syncFb);
       if (pre && pre.fbSenderId) { if (needChannel) $('#f-ch').value = 'fanpage'; $('#f-fb').value = pre.fbSenderId; }
       syncFb();
@@ -249,7 +249,7 @@
         if (tb.selectable) {
           box.innerHTML = `${head}<p>Còn trống lúc ${esc(st.time)} (giữ 2 giờ 15 phút).</p>${Admin.can('reservation.create') ? '<button type="button" class="btn primary" id="book-here">Đặt bàn này</button>' : ''}`;
           const b = box.querySelector('#book-here');
-          if (b) b.addEventListener('click', () => { Admin.prefill = { date: st.date, time: st.time, party: Math.min(tb.capacity, 20), tableId: tb.id }; Admin.go('create'); });
+          if (b) b.addEventListener('click', () => { Admin.prefill = { date: st.date, time: st.time, party: Math.min(tb.capacity, 8), tableId: tb.id }; Admin.go('create'); });
           return;
         }
         const o = occupant(tb);

@@ -10,7 +10,7 @@ const CHANNEL = { website: 'Website', hotline: 'Hotline', fanpage: 'Fanpage' };
 function cell(v) {
   if (v === null || v === undefined) return '""';
   let s = typeof v === 'number' ? String(v) : String(v);
-  if (typeof v !== 'number' && /^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+  if (typeof v !== 'number' && /^[\t\r\n]|^[ \t\r\n]*[=+\-@]/.test(s)) s = `'${s}`;
   return `"${s.replace(/"/g, '""')}"`;
 }
 function toCsv(headers, rows) {

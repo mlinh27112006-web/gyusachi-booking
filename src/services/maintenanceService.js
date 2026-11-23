@@ -69,6 +69,8 @@ async function setTableActive(user, id, isActive, noteRaw) {
   }
   await ensureSchema();
   const out = await db.withTransaction(async (client) => {
+    // Xếp hàng cùng khóa với lúc tạo đặt bàn (1001, mã bàn) để tạm ngưng bàn và đặt bàn không chạy đồng thời trên cùng một bàn.
+    await client.query('SELECT pg_advisory_xact_lock(1001, $1::int)', [id]);
     const cur = (await client.query('SELECT id, code, is_active FROM dining_tables WHERE id = $1 FOR UPDATE', [id])).rows[0];
     if (!cur) throw new AppError(404, 'Không tìm thấy bàn', 'NOT_FOUND');
     if (cur.is_active === isActive) return { code: cur.code, changed: false };
@@ -79,12 +81,17 @@ async function setTableActive(user, id, isActive, noteRaw) {
         throw new AppError(409, `Bàn ${cur.code.toUpperCase()} còn ${n} lượt đặt chưa xử lý. Hãy hủy hoặc đổi bàn cho khách trước khi tạm ngưng`, 'HAS_UPCOMING');
       }
     }
+    let releasedLocks = 0;
+    if (!isActive) {
+      // Khách đang giữ bàn này (chưa bấm xác nhận): nhả khóa ngay để họ nhận thông báo "bàn không còn" khi xác nhận, thay vì lỗi dữ liệu chung.
+      releasedLocks = (await client.query('DELETE FROM table_locks WHERE table_id = $1', [id])).rowCount;
+    }
     await client.query('UPDATE dining_tables SET is_active = $2, maintenance_note = $3 WHERE id = $1', [id, isActive, isActive ? null : note]);
     await client.query(
       `INSERT INTO audit_logs (staff_id, actor_label, action, entity_type, entity_id, detail)
        VALUES ($1, 'staff', 'table.update', 'dining_table', $2, $3::jsonb)`,
-      [user.id, String(id), JSON.stringify({ table: cur.code, isActive, note: isActive ? undefined : note })]);
-    return { code: cur.code, changed: true };
+      [user.id, String(id), JSON.stringify({ table: cur.code, isActive, note: isActive ? undefined : note, releasedLocks })]);
+    return { code: cur.code, changed: true, releasedLocks };
   });
   liveBus.changed();
   return out;
@@ -129,12 +136,16 @@ async function createClosure(user, input) {
        VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`, [v.dateFrom, v.dateTo, v.timeFrom, v.timeTo, v.reason, user.id]);
     const id = ins.rows[0].id;
     // Lượt đã đặt trong thời gian đóng cửa không tự hủy: báo số lượng để nhân viên liên hệ khách.
+    // Tính theo GIAO NHAU của [giờ hẹn, giờ hết giữ bàn) với từng khung đóng cửa của từng ngày (kể cả lượt bắt đầu trước giờ đóng cửa nhưng kéo dài vào trong).
     const conflicts = (await client.query(
       `SELECT count(*)::int AS n FROM reservations r
         WHERE r.status = 'confirmed'
-          AND (r.start_time AT TIME ZONE ${LOCAL})::date BETWEEN $1::date AND $2::date
-          AND ($3::time IS NULL OR ((r.start_time AT TIME ZONE ${LOCAL})::time >= $3::time
-                                    AND (r.start_time AT TIME ZONE ${LOCAL})::time < $4::time))`,
+          AND EXISTS (
+            SELECT 1 FROM generate_series($1::date, $2::date, interval '1 day') AS g(d)
+             WHERE tstzrange(r.start_time, r.end_time, '[)') &&
+                   tstzrange((g.d::date + COALESCE($3::time, time '00:00'))::timestamp AT TIME ZONE ${LOCAL},
+                             CASE WHEN $4::time IS NULL THEN ((g.d::date + 1)::timestamp AT TIME ZONE ${LOCAL})
+                                  ELSE (g.d::date + $4::time)::timestamp AT TIME ZONE ${LOCAL} END, '[)'))`,
       [v.dateFrom, v.dateTo, v.timeFrom, v.timeTo])).rows[0].n;
     await client.query(
       `INSERT INTO audit_logs (staff_id, actor_label, action, entity_type, entity_id, detail)

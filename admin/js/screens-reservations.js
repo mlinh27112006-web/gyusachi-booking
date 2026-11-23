@@ -8,6 +8,7 @@
     { key: 'arrive', path: 'arrive', label: 'Khách đã đến', cls: 'primary' },
     { key: 'release', path: 'release', label: 'Khách đã về', cls: 'primary' },
     { key: 'no_show', path: 'no-show', label: 'Không đến', cls: '' },
+    { key: 'edit', path: '', label: 'Sửa', cls: '' },
     { key: 'cancel', path: 'cancel', label: 'Hủy', cls: 'danger-ghost' },
   ];
   const CONFIRM = {
@@ -29,6 +30,10 @@
   const LATE_HOLD_MIN = 30; // quá số phút này nhà hàng có thể nhả bàn cho khách khác
   function lateText(r) {
     if (r.status !== 'confirmed' || r.arrivedAt) return '';
+    const rem = r.reminder && r.reminder.startsWith('Cần gọi') ? `${r.reminder}. ` : '';
+    return rem + lateText0(r);
+  }
+  function lateText0(r) {
     const min = Math.floor((Date.now() - toMs(r.start)) / 60000);
     return min > 0 ? `Trễ ${min >= 60 ? `${Math.floor(min / 60)} giờ ${min % 60} phút` : `${min} phút`}${min > LATE_HOLD_MIN ? ` (quá ${LATE_HOLD_MIN} phút giữ bàn, có thể nhả bàn)` : ''}` : '';
   }
@@ -38,11 +43,69 @@
     return ACTIONS.filter((a) => r.actions[a.key]).map((a) => `<button type="button" class="btn sm ${a.cls}" data-act="${a.key}" data-path="${a.path}" data-id="${r.id}">${a.label}</button>`).join('');
   }
 
+  // Hộp thoại sửa lượt đặt: đổi ngày, giờ, số khách, bàn. Trả về true nếu đã lưu.
+  function editDialog(r) {
+    return new Promise((resolve) => {
+      const [d0, t0] = r.start.split(' ');
+      const d = document.createElement('dialog');
+      d.innerHTML = `<form method="dialog" class="dlg" novalidate><h2>Sửa lượt ${esc(r.bookingCode)}</h2>
+        <p class="hint">${esc(r.customerName)} · ${esc(r.customerPhone)}. Sau khi lưu, hãy gọi báo khách biết thay đổi.</p>
+        <label>Ngày<input type="date" name="d" value="${d0}" required></label>
+        <label>Giờ<select name="t"></select></label>
+        <label>Số khách<input type="number" name="p" min="1" max="8" value="${r.partySize}" required></label>
+        <label>Bàn<select name="b"></select></label>
+        <p class="err" role="alert"></p>
+        <div class="dlg-actions"><button type="button" class="btn" data-x>Đóng</button><button class="btn primary" type="submit">Lưu thay đổi</button></div></form>`;
+      document.body.appendChild(d);
+      const f = d.querySelector('form'); const err = d.querySelector('.err'); let saved = false; let seq = 0;
+      const tSel = f.t; const bSel = f.b;
+      async function loadSlots() {
+        try {
+          const { slots } = await Admin.api('GET', `/api/staff/slots?date=${f.d.value}`);
+          const cur = tSel.value || t0; const list = slots.map((x) => (typeof x === 'string' ? x : x.time));
+          if (f.d.value === d0 && !list.includes(t0)) list.push(t0); list.sort();
+          tSel.innerHTML = list.map((x) => `<option value="${x}">${x}</option>`).join('');
+          tSel.value = list.includes(cur) ? cur : list[0] || '';
+        } catch (e) { err.textContent = e.message; }
+      }
+      async function loadTables() {
+        const my = ++seq; const party = Number(f.p.value);
+        if (!f.d.value || !tSel.value || !(party >= 1)) return;
+        try {
+          const { tables } = await Admin.api('GET', `/api/staff/tables/map?date=${f.d.value}&time=${tSel.value}&party=${party}`);
+          if (my !== seq) return;
+          const keep = bSel.value || String(r.tableId);
+          bSel.innerHTML = tables.filter((t) => t.selectable || t.id === r.tableId).map((t) => {
+            const small = t.capacity < party;
+            return `<option value="${t.id}" ${small ? 'disabled' : ''}>${esc(t.code.toUpperCase())} · ${t.capacity} chỗ · tầng ${t.floor}${t.id === r.tableId ? ' (hiện tại)' : ''}${small ? ' · nhỏ quá' : ''}</option>`;
+          }).join('');
+          if ([...bSel.options].some((o) => o.value === keep && !o.disabled)) bSel.value = keep;
+        } catch (e) { if (my === seq) err.textContent = e.message; }
+      }
+      f.d.addEventListener('change', async () => { err.textContent = ''; await loadSlots(); loadTables(); });
+      tSel.addEventListener('change', () => { err.textContent = ''; loadTables(); });
+      f.p.addEventListener('change', () => { err.textContent = ''; loadTables(); });
+      d.querySelector('[data-x]').addEventListener('click', () => d.close());
+      f.addEventListener('submit', async (ev) => {
+        ev.preventDefault(); err.textContent = '';
+        const b = f.querySelector('[type=submit]'); b.disabled = true;
+        try {
+          await Admin.api('PATCH', `/api/staff/reservations/${r.id}`, { date: f.d.value, time: tSel.value, party: Number(f.p.value), tableId: Number(bSel.value) });
+          saved = true; d.close();
+        } catch (e) { err.textContent = e.message; b.disabled = false; }
+      });
+      d.addEventListener('close', () => { d.remove(); resolve(saved); });
+      d.showModal();
+      loadSlots().then(loadTables);
+    });
+  }
+
   // Gắn xử lý cho các nút thao tác trong một vùng. reload() được gọi sau khi đổi trạng thái thành công.
   function bindActions(root, byId, reload) {
     root.addEventListener('click', async (ev) => {
       const btn = ev.target.closest('button[data-act]'); if (!btn || btn.disabled) return;
       const r = byId(Number(btn.dataset.id)); if (!r) return;
+      if (btn.dataset.act === 'edit') { if (await editDialog(r)) Admin.toast(`Đã sửa lượt ${r.bookingCode}. Nhớ gọi báo khách.`, true); reload(); return; }
       const c = CONFIRM[btn.dataset.act];
       if (c) { const o = c(r); if (!(await Admin.confirm(o.title, o.text, o.yes, o.danger))) return; }
       root.querySelectorAll(`button[data-id="${r.id}"]`).forEach((b) => { b.disabled = true; });
