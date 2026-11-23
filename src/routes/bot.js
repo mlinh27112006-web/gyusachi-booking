@@ -11,7 +11,7 @@ function limited(ip) {
   const now = Date.now();
   const arr = (hits.get(ip) || []).filter((t) => now - t < 60000);
   arr.push(now); hits.set(ip, arr);
-  if (hits.size > 5000) hits.clear();
+  while (hits.size > 5000) hits.delete(hits.keys().next().value); // bỏ mục cũ nhất, không xóa hết bộ đếm
   return arr.length > 40;
 }
 

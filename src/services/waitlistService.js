@@ -141,15 +141,21 @@ async function check() {
     const waiting = await db.query(
       `${SELECT} WHERE status = 'waiting' AND start_time > now() ORDER BY created_at, id`);
     for (const row of waiting.rows) {
-      const avail = await tableService.countAvailable({ start: row.start_time, holdMinutes: settings.hold_minutes, party: row.party_size });
-      const held = await db.query(
-        "SELECT count(*)::int AS n FROM waitlist WHERE status = 'notified' AND start_time = $1::timestamptz AND notify_expires_at > now()",
-        [row.start_time]);
-      if (avail <= held.rows[0].n) continue;
-      const claim = await db.query(
-        `UPDATE waitlist SET status = 'notified', notified_at = now(), notify_expires_at = now() + make_interval(mins => $2::int)
-          WHERE id = $1 AND status = 'waiting' RETURNING id`, [row.id, NOTICE_MINUTES]);
-      if (!claim.rowCount) continue;
+      // Đếm bàn trống, đếm khách đã báo và "nhận" lượt chờ trong MỘT giao dịch có khóa chung (1003): nếu có hai máy chủ
+      // chạy cùng lúc thì lần lượt từng máy, không thể cùng báo hai khách cho một bàn.
+      const claimed = await db.withTransaction(async (client) => {
+        await client.query('SELECT pg_advisory_xact_lock(1003)');
+        const avail = await tableService.countAvailable({ start: row.start_time, holdMinutes: settings.hold_minutes, party: row.party_size });
+        const held = await client.query(
+          "SELECT count(*)::int AS n FROM waitlist WHERE status = 'notified' AND start_time = $1::timestamptz AND notify_expires_at > now()",
+          [row.start_time]);
+        if (avail <= held.rows[0].n) return false;
+        const claim = await client.query(
+          `UPDATE waitlist SET status = 'notified', notified_at = now(), notify_expires_at = now() + make_interval(mins => $2::int)
+            WHERE id = $1 AND status = 'waiting' RETURNING id`, [row.id, NOTICE_MINUTES]);
+        return claim.rowCount > 0;
+      });
+      if (!claimed) continue;
       changed = true;
       let result = 'Cần nhân viên gọi khách';
       if (row.channel === 'fanpage' && row.external_user_id) {

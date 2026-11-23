@@ -22,7 +22,8 @@ function assertNotLocked(keys, now = Date.now()) {
   }
 }
 function recordFail(keys, now = Date.now()) {
-  if (attempts.size > 5000) attempts.clear();
+  // Đầy thì chỉ bỏ các mục cũ nhất, không xóa hết (xóa hết sẽ mở khóa cho mọi IP/số điện thoại đang bị khóa).
+  while (attempts.size > 5000) attempts.delete(attempts.keys().next().value);
   for (const k of keys) {
     let e = attempts.get(k);
     if (!e || now - e.first > LOCK_MS) e = { fails: 0, first: now, lockedUntil: 0 };
