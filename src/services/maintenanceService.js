@@ -44,7 +44,7 @@ async function refresh() {
        FROM closures WHERE date_to >= (now() AT TIME ZONE ${LOCAL})::date`);
   rules.setClosures(rows);
 }
-refresh().catch(() => {});
+refresh().catch((e) => console.error('[bao-tri] không khởi tạo được:', e.message));
 setInterval(() => refresh().catch(() => {}), 30000).unref();
 
 // ---- Bàn ----
