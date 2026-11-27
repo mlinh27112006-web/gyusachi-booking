@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Đặt bàn | Gyu Sachi Yakiniku</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Noto+Serif+JP:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/site.css">
+  <link rel="stylesheet" href="/css/floorplan.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/">
+      <img class="brand-logo" src="/img/logo.png" alt="" width="52" height="44"><span class="brand-name">GYU SACHI</span>
+      <span class="brand-sub" data-i18n="brandSub">Yakiniku Đà Nẵng</span>
+    </a>
+    <nav class="nav" aria-label="Menu">
+      <a href="/about.html" data-i18n="navAbout">Về chúng tôi</a>
+      <a href="/menu.html" data-i18n="navMenu">Thực đơn</a>
+      <a href="/book.html" aria-current="page" data-i18n="navBook">Đặt bàn</a>
+      <a href="/lookup.html" data-i18n="navLookup">Tra cứu</a>
+      <a href="/recruitment.html" data-i18n="navJobs">Tuyển dụng</a>
+      <span class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="vi" aria-pressed="true">VI</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </span>
+    </nav>
+  </header>
+
+  <main class="page" id="app">
+    <div id="flow">
+      <div class="page-head">
+        <h1 data-i18n="bookTitle">Đặt bàn</h1>
+        <p data-i18n="bookLead"></p>
+      </div>
+
+      <div class="layout">
+        <div class="col-left">
+          <section class="step" aria-labelledby="h-step1">
+            <div class="step-head"><span class="step-no" aria-hidden="true">1</span><h2 id="h-step1" data-i18n="step1"></h2></div>
+            <span class="field-label" id="lbl-date" data-i18n="date"></span>
+            <div class="dates" id="dates" role="group" aria-labelledby="lbl-date"></div>
+
+            <span class="field-label" id="lbl-party" data-i18n="party"></span>
+            <div class="stepper" role="group" aria-labelledby="lbl-party">
+              <button type="button" id="party-minus" aria-label="-">&minus;</button>
+              <output id="party-out" aria-live="polite"></output>
+              <button type="button" id="party-plus" aria-label="+">+</button>
+            </div>
+            <p class="notice" id="big-group" hidden></p>
+
+            <span class="field-label" id="lbl-time" data-i18n="time"></span>
+            <div id="slots" role="group" aria-labelledby="lbl-time"></div>
+          </section>
+        </div>
+
+        <div>
+          <section class="map-card" aria-labelledby="h-step2">
+            <div class="step-head"><span class="step-no" aria-hidden="true">2</span><h2 id="h-step2" data-i18n="step2"></h2></div>
+            <div class="floor-tabs" id="floor-tabs" role="group"></div>
+            <div class="plan" id="plan"><div class="plan-empty" data-i18n="pickTimeFirst"></div></div>
+            <ul class="legend" aria-label="Chú thích">
+              <li><span class="sw free"></span><span data-i18n="legendFree"></span></li>
+              <li><span class="sw mine"></span><span data-i18n="legendSelected"></span></li>
+              <li><span class="sw taken"></span><span data-i18n="legendTaken"></span></li>
+              <li><span class="sw off"></span><span data-i18n="legendOff"></span></li>
+            </ul>
+            <p class="hint" data-i18n="mapHint"></p>
+          </section>
+
+          <section class="step form-card" id="form-step" data-state="locked" aria-labelledby="h-step3">
+            <div class="step-head"><span class="step-no" aria-hidden="true">3</span><h2 id="h-step3" data-i18n="step3"></h2></div>
+            <p class="empty" id="form-empty" data-i18n="selectTableFirst"></p>
+            <form id="form" novalidate hidden>
+              <div class="fld">
+                <label for="f-name" data-i18n="fullName"></label>
+                <input id="f-name" name="name" autocomplete="name" maxlength="100" required>
+                <p class="err" id="e-name" role="alert"></p>
+              </div>
+              <div class="fld">
+                <label for="f-phone" data-i18n="phone"></label>
+                <input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" required>
+                <p class="err" id="e-phone" role="alert"></p>
+              </div>
+              <div class="fld">
+                <label for="f-note" data-i18n="note"></label>
+                <textarea id="f-note" name="note" maxlength="500" data-i18n-ph="notePh"></textarea>
+              </div>
+              <div class="btn-row"><button class="btn" type="submit" id="submit" data-i18n="submit"></button></div>
+            </form>
+          </section>
+
+          <div class="hold-bar" id="hold-bar" role="status">
+            <span><strong id="hold-text"></strong></span>
+            <span class="time" id="hold-time"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="done" id="done" hidden aria-labelledby="done-title">
+      <h1 id="done-title" data-i18n="doneTitle"></h1>
+      <p class="lead" data-i18n="doneLead"></p>
+      <div class="code-box"><small data-i18n="doneCode"></small><output id="done-code"></output></div>
+      <dl class="recap" id="recap"></dl>
+      <p class="empty" data-i18n="holdNote"></p>
+      <div class="btn-row">
+        <a class="btn ghost" href="/lookup.html" data-i18n="lookupLink"></a>
+        <button class="btn" type="button" id="book-again" data-i18n="bookAgain"></button>
+      </div>
+    </section>
+  </main>
+
+  <p class="foot"><span data-i18n="footer"></span><span class="sep" aria-hidden="true">|</span><span data-i18n="hotlineLabel"></span>: <a id="foot-hotline" href="#"></a></p>
+  <div class="toast" id="toast" role="alert"></div>
+
+  <script src="/js/i18n.js"></script>
+  <script src="/js/floorplan.js"></script>
+  <script src="/js/book.js"></script>
+  <script src="/js/footer.js"></script>
+</body>
+</html>

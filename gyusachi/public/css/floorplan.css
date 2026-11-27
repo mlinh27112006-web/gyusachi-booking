@@ -1,0 +1,71 @@
+/* Mặt bằng nhà hàng: nền gỗ sơn mài tối, bàn là mặt bếp nướng nhìn từ trên xuống. */
+.fp {
+  position: relative; width: 100%; max-width: 560px; margin: 0 auto; aspect-ratio: 100 / 130; container-type: size;
+  border-radius: 12px; overflow: hidden; border: 1px solid rgba(201, 162, 75, 0.35);
+  background:
+    linear-gradient(rgba(201,162,75,0.06) 1px, transparent 1px) 0 0 / 7.69% 5.88%,
+    linear-gradient(90deg, rgba(201,162,75,0.06) 1px, transparent 1px) 0 0 / 7.69% 5.88%,
+    radial-gradient(120% 90% at 50% 0%, #2a1514 0%, #170b0b 70%);
+  box-shadow: inset 0 0 0 5px #120808, inset 0 0 0 6px rgba(201,162,75,0.22), 0 14px 34px rgba(0,0,0,0.35);
+}
+.plan.fp { height: auto; min-width: 0; }
+.aplan.fp { height: auto; }
+
+/* ---- Khu vực không đặt được ---- */
+.fp-l {
+  position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.3em;
+  color: #d8cdb6; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; text-align: center;
+  font-size: clamp(9px, 2.9cqw, 15px); line-height: 1.15; border-radius: 8px;
+  background: linear-gradient(160deg, #2e2b2a, #232120); border: 1px solid #4b4644;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.fp-l svg { font-size: 1.9em; color: #e0b85a; }
+.fp-l.wc svg { color: #6cc3ee; } .fp-l.kitchen svg { color: #ee7a6c; }
+.fp-l.aisle { background: repeating-linear-gradient(0deg, #262322 0 14px, #2c2928 14px 28px); border-style: dashed; color: #9c928a; }
+.fp-l.aisle span { writing-mode: vertical-rl; letter-spacing: 0.5em; }
+.fp-l.kitchen { background: linear-gradient(160deg, #35302e, #242120); }
+
+/* ---- Bàn ---- */
+.fp-t {
+  position: absolute; padding: 0; cursor: pointer; font: inherit; color: #fff5e0;
+  display: grid; place-items: center; align-content: center; gap: 0.1em; border-radius: 9px;
+  border: 2px solid #d8b45a;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(0,0,0,0.38) 0 22%, transparent 23%),
+    linear-gradient(180deg, #c3202a, #8f121a);
+  box-shadow: 0 3px 0 #4e0a0f, 0 8px 14px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.25);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+.fp-t:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.12); }
+.fp-t:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.fp-name { display: inline-flex; align-items: center; gap: 0.3em; font-weight: 800; font-size: clamp(12px, 4cqw, 21px); line-height: 1; letter-spacing: 0.03em; position: relative; z-index: 1; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+.fp-cap { font-size: clamp(9px, 2.8cqw, 14px); font-weight: 600; opacity: 0.92; position: relative; z-index: 1; }
+.fp-cap::after { content: ' chỗ'; }
+.fp-crown svg { font-size: 1.15em; color: #ffd777; }
+.fp-grill { position: absolute; left: 50%; top: 50%; width: 38%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; border: 1.5px solid rgba(255, 214, 120, 0.28); pointer-events: none; }
+
+/* Ghế */
+.fp-seats { position: absolute; left: 10%; right: 10%; display: flex; justify-content: space-around; pointer-events: none; }
+.fp-seats.s-top { top: -0.55em; } .fp-seats.s-bot { bottom: -0.55em; }
+.fp-seats i { width: clamp(7px, 2.6cqw, 14px); height: clamp(4px, 1.3cqw, 7px); border-radius: 4px; background: #5d4630; border: 1px solid #8d6c45; }
+
+.fp-t.vip { border-color: #f0cf7a; box-shadow: 0 3px 0 #4e0a0f, 0 0 0 2px #1a0e0e, 0 0 0 3.5px #d8b45a, 0 10px 18px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.3); }
+
+/* Đang chọn */
+.fp-t.mine { background: radial-gradient(circle, rgba(0,0,0,0.25) 0 22%, transparent 23%), linear-gradient(180deg, #e7c36a, #b88a2a); border-color: #fff0c0; color: #2a1708; box-shadow: 0 3px 0 #6d4f12, 0 0 0 4px rgba(240,207,122,0.35), 0 8px 14px rgba(0,0,0,0.4); }
+.fp-t.mine .fp-name { text-shadow: none; } .fp-t.mine .fp-grill { border-color: rgba(42,23,8,0.35); }
+.fp-t.mine .fp-seats i { background: #f0cf7a; border-color: #fff0c0; }
+/* Đã đặt hoặc đang bị giữ */
+.fp-t.taken { cursor: not-allowed; color: #aaa09b; border-color: #6b6360; background: repeating-linear-gradient(135deg, #4a4341 0 7px, #332d2c 7px 14px); box-shadow: 0 3px 0 #231f1e, inset 0 1px 0 rgba(255,255,255,0.08); }
+.fp-t.taken .fp-name { text-shadow: none; } .fp-t.taken .fp-grill { display: none; } .fp-t.taken .fp-seats i { background: #3b3534; border-color: #5a5250; }
+/* Không phù hợp số khách */
+.fp-t.off { cursor: not-allowed; color: #8f8681; background: transparent; border: 1.5px dashed #6b6360; box-shadow: none; opacity: 0.55; }
+.fp-t.off .fp-grill, .fp-t.off .fp-cap { display: none; } .fp-t.off .fp-name { text-shadow: none; } .fp-t.off .fp-seats i { background: transparent; border-color: #6b6360; }
+/* Dành cho trang quản trị */
+.fp-t.wait { background: radial-gradient(circle, rgba(0,0,0,0.2) 0 22%, transparent 23%), linear-gradient(180deg, #e0a232, #b3741a); border-color: #ffd98a; color: #2a1800; box-shadow: 0 3px 0 #6b440a, 0 8px 14px rgba(0,0,0,0.4); }
+.fp-t.wait .fp-name { text-shadow: none; }
+.fp-t.seated { background: radial-gradient(circle, rgba(0,0,0,0.25) 0 22%, transparent 23%), linear-gradient(180deg, #27935e, #17613e); border-color: #8ee0b3; box-shadow: 0 3px 0 #0c3a24, 0 8px 14px rgba(0,0,0,0.4); }
+.fp-t.sel { outline: 3px solid #fff; outline-offset: 3px; z-index: 2; }
+
+.fp-empty { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 24px; color: #cdbf9f; }
+@media (prefers-reduced-motion: reduce) { .fp-t { transition: none; } }

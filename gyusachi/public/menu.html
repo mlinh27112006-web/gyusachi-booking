@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Thực đơn | Gyu Sachi Yakiniku</title>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Noto+Serif+JP:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/site.css">
+  <link rel="stylesheet" href="/css/pages.css">
+  <link rel="stylesheet" href="/css/menu.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/"><img class="brand-logo" src="/img/logo.png" alt="" width="52" height="44"><span class="brand-name">GYU SACHI</span><span class="brand-sub" data-i18n="brandSub">Yakiniku Đà Nẵng</span></a>
+    <nav class="nav" aria-label="Menu">
+      <a href="/about.html" data-i18n="navAbout">Về chúng tôi</a>
+      <a href="/menu.html" aria-current="page" data-i18n="navMenu">Thực đơn</a>
+      <a href="/book.html" data-i18n="navBook">Đặt bàn</a>
+      <a href="/lookup.html" data-i18n="navLookup">Tra cứu</a>
+      <a href="/recruitment.html" data-i18n="navJobs">Tuyển dụng</a>
+      <span class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="vi" aria-pressed="true">VI</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </span>
+    </nav>
+  </header>
+  <main class="mn">
+    <div class="mn-head">
+      <div class="eyebrow" id="m-eyebrow">Thực đơn</div>
+      <h1 id="m-title">Thực đơn buffet</h1>
+      <p id="m-lead">Chọn mức giá rồi lật từng trang, từ món khai vị đến món chính và món phụ.</p>
+    </div>
+    <div class="tier-tabs" id="tabs" role="group" aria-label="Mức buffet"></div>
+    <div class="promo" id="promo" hidden></div>
+    <div class="chap-tabs" id="chaps" role="group" aria-label="Các phần"></div>
+    <div class="book-stage">
+      <button type="button" class="turn prev" id="prev" aria-label="Trang trước">‹</button>
+      <div class="book" id="book" aria-live="polite"></div>
+      <div class="single" id="single"></div>
+      <button type="button" class="turn next" id="next" aria-label="Trang sau">›</button>
+    </div>
+    <div class="book-foot"><span id="counter"></span><span class="hint" id="hint"></span></div>
+    <p class="menu-note" id="note"></p>
+    <div class="btn-row center"><a class="btn big" href="/book.html" id="m-cta">Đặt bàn ngay</a></div>
+  </main>
+  <div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Xem ảnh">
+    <div class="lb-bar"><span id="lb-n"></span><div><button type="button" id="lb-prev" aria-label="Trang trước">‹</button><button type="button" id="lb-next" aria-label="Trang sau">›</button><button type="button" id="lb-x" aria-label="Đóng">✕</button></div></div>
+    <div class="lb-img" id="lb-img"></div>
+  </div>
+  <script src="/js/i18n.js"></script>
+  <script src="/js/menu.js"></script>
+  <script src="/js/footer.js"></script>
+</body>
+</html>
