@@ -218,3 +218,36 @@ a.btn { text-decoration: none; color: inherit; }
 .fb-status { margin: 12px 2px; padding: 10px 14px; border-radius: 8px; font-size: 14px; background: #fff4de; color: #6b4300; border: 1px solid #f0d9a6; }
 .fb-status.on { background: #e4f4ea; color: #14522f; border-color: #b4dcc6; }
 .fb-status:empty { display: none; }
+/* Sửa lỗi thanh công cụ Safari iPhone che mất nút Đăng xuất ở đáy menu */
+@media (max-width: 860px) {
+  .side {
+    height: 100dvh;
+  }
+  .side-user {
+    flex: none;
+    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+    background: var(--side);
+  }
+  .side-actions {
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .side-actions .link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 4px 12px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    text-decoration: none;
+  }
+  .bar-logout {
+    display: inline-flex !important;
+    margin-left: auto;
+    color: #a40e14;
+    border-color: #e3b5b7;
+  }
+}
+.bar-logout {
+  display: none;
+}

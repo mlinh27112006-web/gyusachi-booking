@@ -60,6 +60,9 @@
   }
 
   Admin.logout = (msg) => {
+  $('btn-logout').addEventListener('click', () => Admin.logout());
+if ($('bar-logout')) $('bar-logout').addEventListener('click', () => Admin.logout());
+  }
     setToken(null); Admin.user = null; destroyCurrent(); showLogin(msg);
   };
 
